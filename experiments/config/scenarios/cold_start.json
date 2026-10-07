@@ -1,0 +1,8 @@
+{
+  "id": "cold_start",
+  "name": "Cold start",
+  "description": "PSP Gamma is new: observed history (overall and every segment) is limited to about 20 attempts, for its entire lifetime in the stream. Its true rates are the base world values.",
+  "backgroundHistoryLimits": [
+    { "pspId": "gamma", "maxAttempts": 20 }
+  ]
+}

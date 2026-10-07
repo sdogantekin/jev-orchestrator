@@ -1,0 +1,55 @@
+{
+  "id": "conflicting_objectives",
+  "name": "Conflicting objectives",
+  "description": "Acceptance, cost and fixed fee move in different directions per PSP, and the stream is skewed toward larger amounts (40% small, 30% medium, 30% large), so cheapest and most-accepted disagree more often.",
+  "worldPspOverrides": {
+    "alpha": {
+      "id": "alpha",
+      "name": "PSP Alpha",
+      "role": "Generalist",
+      "enabled": true,
+      "supportedCurrencies": ["EUR", "GBP", "USD"],
+      "supportedPaymentMethods": ["card", "paypal"],
+      "baseAcceptanceRate": 0.955,
+      "transactionCostPercent": 2.0,
+      "fixedFee": 0.30,
+      "retrySuccessRate": 0.31,
+      "chargebackRate": 0.0018,
+      "latencyCentralMs": 420,
+      "availabilityRate": 0.999
+    },
+    "beta": {
+      "id": "beta",
+      "name": "PSP Beta",
+      "role": "EU specialist",
+      "enabled": true,
+      "supportedCurrencies": ["EUR", "GBP", "USD"],
+      "supportedPaymentMethods": ["card", "paypal", "sepa_debit"],
+      "baseAcceptanceRate": 0.945,
+      "transactionCostPercent": 1.1,
+      "fixedFee": 0.20,
+      "retrySuccessRate": 0.38,
+      "chargebackRate": 0.0021,
+      "latencyCentralMs": 290,
+      "availabilityRate": 0.998
+    },
+    "gamma": {
+      "id": "gamma",
+      "name": "PSP Gamma",
+      "role": "Cheap and fast",
+      "enabled": true,
+      "supportedCurrencies": ["EUR", "GBP", "USD"],
+      "supportedPaymentMethods": ["card", "sepa_debit"],
+      "baseAcceptanceRate": 0.935,
+      "transactionCostPercent": 0.9,
+      "fixedFee": 0.15,
+      "retrySuccessRate": 0.42,
+      "chargebackRate": 0.0015,
+      "latencyCentralMs": 250,
+      "availabilityRate": 0.9995
+    }
+  },
+  "streamOverrides": {
+    "amountBucketWeights": { "small": 0.40, "medium": 0.30, "large": 0.30 }
+  }
+}

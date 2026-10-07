@@ -1,0 +1,6 @@
+{
+  "id": "drift",
+  "name": "Drift",
+  "description": "At transaction 600, PSP Beta's true acceptance rate drops by 0.08 in all segments. The observed view reflects this only after the lag.",
+  "drift": { "startIndex": 600, "pspId": "beta", "acceptanceDelta": -0.08 }
+}

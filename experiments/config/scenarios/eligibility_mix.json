@@ -1,0 +1,8 @@
+{
+  "id": "eligibility_mix",
+  "name": "Eligibility mix",
+  "description": "Base world. The stream shifts to about 40% PayPal and SEPA Debit combined (vs 30% in the base stream), so hard-eligibility exclusions happen more often (PSP Alpha excludes SEPA Debit, PSP Gamma excludes PayPal).",
+  "streamOverrides": {
+    "paymentMethod": { "card": 0.60, "paypal": 0.267, "sepa_debit": 0.133 }
+  }
+}

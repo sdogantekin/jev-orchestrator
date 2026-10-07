@@ -1,0 +1,12 @@
+{
+  "id": "thin_data",
+  "name": "Thin data",
+  "description": "Base world. PSP Beta's observed EUR/DE/card segment is limited to about 25 background attempts, regardless of the normal lag/window.",
+  "backgroundHistoryLimits": [
+    {
+      "pspId": "beta",
+      "segmentKey": { "currency": "EUR", "country": "DE", "paymentMethod": "card" },
+      "maxAttempts": 25
+    }
+  ]
+}

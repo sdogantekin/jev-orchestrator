@@ -1,0 +1,5 @@
+{
+  "id": "stable",
+  "name": "Stable",
+  "description": "Base world, base stream. No drift, no thinned history, no overrides."
+}

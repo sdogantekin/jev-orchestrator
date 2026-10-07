@@ -1,0 +1,82 @@
+{
+  "psps": [
+    {
+      "id": "alpha",
+      "name": "PSP Alpha",
+      "role": "Generalist",
+      "enabled": true,
+      "supportedCurrencies": ["EUR", "GBP", "USD"],
+      "supportedPaymentMethods": ["card", "paypal"],
+      "baseAcceptanceRate": 0.945,
+      "transactionCostPercent": 1.3,
+      "fixedFee": 0.25,
+      "retrySuccessRate": 0.31,
+      "chargebackRate": 0.0018,
+      "latencyCentralMs": 420,
+      "availabilityRate": 0.999
+    },
+    {
+      "id": "beta",
+      "name": "PSP Beta",
+      "role": "EU specialist",
+      "enabled": true,
+      "supportedCurrencies": ["EUR", "GBP", "USD"],
+      "supportedPaymentMethods": ["card", "paypal", "sepa_debit"],
+      "baseAcceptanceRate": 0.930,
+      "transactionCostPercent": 1.1,
+      "fixedFee": 0.20,
+      "retrySuccessRate": 0.38,
+      "chargebackRate": 0.0021,
+      "latencyCentralMs": 290,
+      "availabilityRate": 0.998
+    },
+    {
+      "id": "gamma",
+      "name": "PSP Gamma",
+      "role": "Cheap and fast",
+      "enabled": true,
+      "supportedCurrencies": ["EUR", "GBP", "USD"],
+      "supportedPaymentMethods": ["card", "sepa_debit"],
+      "baseAcceptanceRate": 0.920,
+      "transactionCostPercent": 0.9,
+      "fixedFee": 0.15,
+      "retrySuccessRate": 0.42,
+      "chargebackRate": 0.0015,
+      "latencyCentralMs": 250,
+      "availabilityRate": 0.9995
+    }
+  ],
+  "segmentModifiers": [
+    {
+      "pspId": "beta",
+      "description": "EUR card from DE or NL",
+      "delta": 0.045,
+      "when": { "currency": "EUR", "paymentMethod": "card", "countryIn": ["DE", "NL"] }
+    },
+    {
+      "pspId": "beta",
+      "description": "USD transactions",
+      "delta": -0.050,
+      "when": { "currency": "USD" }
+    },
+    {
+      "pspId": "beta",
+      "description": "New customer on mobile",
+      "delta": -0.020,
+      "when": { "customerType": "new", "device": "mobile" }
+    },
+    {
+      "pspId": "gamma",
+      "description": "Large amount, 3DS eligible",
+      "delta": 0.030,
+      "when": { "amountBucket": "large", "threeDsEligible": true }
+    },
+    {
+      "pspId": "gamma",
+      "description": "Small amount",
+      "delta": -0.020,
+      "when": { "amountBucket": "small" }
+    }
+  ],
+  "drift": null
+}

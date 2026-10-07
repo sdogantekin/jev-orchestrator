@@ -1,0 +1,21 @@
+{
+  "amount": {
+    "medianEUR": 60,
+    "sigma": 0.5,
+    "smallMax": 25,
+    "largeMin": 500,
+    "bucketWeights": { "small": 0.25, "medium": 0.60, "large": 0.15 }
+  },
+  "countryCurrency": [
+    { "country": "DE", "currency": "EUR", "weight": 0.30 },
+    { "country": "NL", "currency": "EUR", "weight": 0.10 },
+    { "country": "FR", "currency": "EUR", "weight": 0.10 },
+    { "country": "UK", "currency": "GBP", "weight": 0.20 },
+    { "country": "US", "currency": "USD", "weight": 0.30 }
+  ],
+  "paymentMethod": { "card": 0.70, "paypal": 0.20, "sepa_debit": 0.10 },
+  "cardScheme": { "visa": 0.55, "mastercard": 0.40, "amex": 0.05 },
+  "device": { "mobile": 0.60, "desktop": 0.40 },
+  "customerType": { "returning": 0.55, "new": 0.45 },
+  "threeDsEligibleRateForCard": 0.70
+}
