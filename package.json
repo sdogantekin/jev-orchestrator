@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "c1-report": "tsx experiments/scripts/c1-report.ts"
+    "c1-report": "tsx experiments/scripts/c1-report.ts",
+    "batch": "tsx experiments/scripts/run-batch.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
