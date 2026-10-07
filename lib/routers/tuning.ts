@@ -1,7 +1,7 @@
 import type { CurrencyConversion } from "../domain/currency.js";
 import { PSP_IDS, type PspId } from "../domain/types.js";
-import { evaluateRouters } from "../experiments/evaluate.js";
-import { TRAIN_SLICE, tuningSeed } from "../experiments/seeds.js";
+import { evaluateRouters, type DecisionRecord } from "../experiments/evaluate.js";
+import { TRAIN_SLICE, tuningSeeds } from "../experiments/seeds.js";
 import type { ResolvedScenario } from "../simulation/scenarios.js";
 import { createRuleRouter, type RuleParams } from "./ruleRouter.js";
 
@@ -52,34 +52,45 @@ export function* enumerateGrid(space: GridSearchSpace): Generator<RuleParams> {
   }
 }
 
+/**
+ * Scores one parameter combination by pooling its decisions across every tuning seed (not
+ * averaging per-seed rates, which would let a seed with few decisions count as much as one
+ * with many): one combined authorization rate and one combined net-cost-per-authorized over
+ * all tuning seeds' training slices together. This is what makes the grid search resistant to
+ * overfitting a single stream's sampling noise.
+ */
 function scoreRuleParams(
   scenario: ResolvedScenario,
-  seed: string,
+  seeds: string[],
   params: RuleParams,
   conversionRates: CurrencyConversion
 ): { authorizationRate: number; netCostPerAuthorized: number } {
   const router = createRuleRouter(params);
-  const { decisionsByRouter } = evaluateRouters({
-    scenario,
-    seed,
-    streamLength: TRAIN_SLICE.end + 1,
-    rangeStart: TRAIN_SLICE.start,
-    rangeEnd: TRAIN_SLICE.end,
-    conversionRates,
-    routers: { candidate: router },
-  });
-  const decisions = decisionsByRouter.candidate!;
-  const authorizationRate = decisions.length > 0 ? decisions.filter((d) => d.authorized).length / decisions.length : 0;
-  const authorizedCosts = decisions.filter((d) => d.authorized).map((d) => d.netCostEUR);
+  const pooled: DecisionRecord[] = [];
+  for (const seed of seeds) {
+    const { decisionsByRouter } = evaluateRouters({
+      scenario,
+      seed,
+      streamLength: TRAIN_SLICE.end + 1,
+      rangeStart: TRAIN_SLICE.start,
+      rangeEnd: TRAIN_SLICE.end,
+      conversionRates,
+      routers: { candidate: router },
+    });
+    pooled.push(...decisionsByRouter.candidate!);
+  }
+  const authorizationRate = pooled.length > 0 ? pooled.filter((d) => d.authorized).length / pooled.length : 0;
+  const authorizedCosts = pooled.filter((d) => d.authorized).map((d) => d.netCostEUR);
   const netCostPerAuthorized =
     authorizedCosts.length > 0 ? authorizedCosts.reduce((s, v) => s + v, 0) / authorizedCosts.length : Infinity;
   return { authorizationRate, netCostPerAuthorized };
 }
 
 /**
- * R2 tuning (section 6.2): grid search on the training slice of a dedicated tuning stream
- * (never one of the 20 evaluation seeds), maximizing authorization rate, ties broken by lower
- * net cost per authorized transaction.
+ * R2 tuning (section 6.2): grid search on the training slice, maximizing authorization rate,
+ * ties broken by lower net cost per authorized transaction. Scored across several dedicated
+ * tuning seeds pooled together (never the 20 evaluation seeds, never the test slice), to avoid
+ * overfitting a single stream's sampling noise.
  */
 export function tuneR2(
   scenario: ResolvedScenario,
@@ -87,13 +98,13 @@ export function tuneR2(
   conversionRates: CurrencyConversion,
   space: GridSearchSpace = DEFAULT_GRID
 ): RuleParams {
-  const seed = tuningSeed(scenarioId);
+  const seeds = tuningSeeds(scenarioId);
   let best: RuleParams | null = null;
   let bestAuthRate = -Infinity;
   let bestNetCost = Infinity;
 
   for (const params of enumerateGrid(space)) {
-    const { authorizationRate, netCostPerAuthorized } = scoreRuleParams(scenario, seed, params, conversionRates);
+    const { authorizationRate, netCostPerAuthorized } = scoreRuleParams(scenario, seeds, params, conversionRates);
     const better =
       authorizationRate > bestAuthRate ||
       (authorizationRate === bestAuthRate && netCostPerAuthorized < bestNetCost);

@@ -8,7 +8,14 @@ export function evalSeed(scenarioId: string, seedIndex: number): string {
   return `${scenarioId}|eval|${seedIndex}`;
 }
 
-/** A separate seed from the 20 evaluation seeds, used only for R2's training-slice tuning (section 6.2). */
-export function tuningSeed(scenarioId: string): string {
-  return `${scenarioId}|tuning`;
+/**
+ * Separate seeds from the 20 evaluation seeds, used only for R2's training-slice tuning
+ * (section 6.2). Scoring a parameter combination by its pooled result across several tuning
+ * seeds (rather than one) reduces overfitting to a single stream's sampling noise, while still
+ * never touching the evaluation seeds or the test slice.
+ */
+export const TUNING_SEED_COUNT = 5;
+
+export function tuningSeeds(scenarioId: string): string[] {
+  return Array.from({ length: TUNING_SEED_COUNT }, (_, i) => `${scenarioId}|tuning|${i + 1}`);
 }

@@ -1,0 +1,62 @@
+{
+  "scenarioId": "stable",
+  "tunedR2Params": {
+    "preferredForEuCard": "beta",
+    "preferredForUsd": "alpha",
+    "preferredDefault": "gamma",
+    "largeThreshold": 600,
+    "smallThreshold": 30,
+    "safetyAvailabilityThreshold": 0.99,
+    "safetyAcceptanceThreshold": 0.85
+  },
+  "singleEligibleCount": 0,
+  "zeroEligibleCount": 0,
+  "decisionCount": 14000,
+  "metrics": {
+    "R0": {
+      "authorizationRate": {
+        "mean": 0.9420714285714286,
+        "lo": 0.9383571428571429,
+        "hi": 0.9460714285714286,
+        "n": 14000
+      },
+      "netCostPerAuthorized": {
+        "mean": 2.289465876719264,
+        "lo": 2.0965222223040043,
+        "hi": 2.518700222966197,
+        "n": 13189
+      },
+      "averageLatencyMs": 413.80509237634067
+    },
+    "R1": {
+      "authorizationRate": {
+        "mean": 0.9429285714285714,
+        "lo": 0.939,
+        "hi": 0.9466428571428571,
+        "n": 14000
+      },
+      "netCostPerAuthorized": {
+        "mean": 2.207973550357411,
+        "lo": 1.9916089249470865,
+        "hi": 2.443983129338659,
+        "n": 13201
+      },
+      "averageLatencyMs": 356.73262788347097
+    },
+    "R2": {
+      "authorizationRate": {
+        "mean": 0.9406428571428571,
+        "lo": 0.9365714285714286,
+        "hi": 0.9444285714285714,
+        "n": 14000
+      },
+      "netCostPerAuthorized": {
+        "mean": 2.0811088361977874,
+        "lo": 1.9002425889800434,
+        "hi": 2.299141792989714,
+        "n": 13169
+      },
+      "averageLatencyMs": 334.7414416904935
+    }
+  }
+}

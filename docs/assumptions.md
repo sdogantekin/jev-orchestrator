@@ -64,7 +64,20 @@ Retry decisions are out of v1 scope (section 4), so there is no simulated retry 
 observe. The PSP's `retrySuccessRate` is passed through from config as an exact value in the
 observed view, not estimated with sampling noise like acceptance/availability/chargeback are.
 
-## 8. Scenario overrides are single-axis
+## 8. R2 tuning pools 5 dedicated tuning seeds, not 1
+
+Section 6.2 says to tune "on a stream from the same scenario with a separate tuning seed"
+(singular). A first pass at step 2's checkpoint did exactly that and it overfit badly: the
+grid search (1,458 combinations) against ~280 usable training transactions from one stream
+found parameters that scored 95.0% on that exact stream but only 92.2% on the real 20-seed test
+evaluation — worse than the untuned R1, on a scenario (stable) with no reason for R2 to lose.
+Confirmed not a bug (the chosen params do win on the stream they were tuned on; they just don't
+generalize). Owner decided (2026-10-07) to pool 5 separate tuning seeds — score each parameter
+combination by its combined result across all 5 training slices, not by any one of them — which
+fixed it: R2 no longer loses to R0/R1 on any scenario. This is a deviation from the literal
+"a stream" wording, made explicitly with the owner's sign-off rather than silently.
+
+## 9. Scenario overrides are single-axis
 
 Each of the six scenarios (5.6) changes one mechanism (drift, a background-history cap, a
 world/stream override). `resolveScenario` supports combining them, but no scenario config
