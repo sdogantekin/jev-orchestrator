@@ -1,167 +1,170 @@
 {
   "responsiveness": {
+    "fixedCompetitorId": "alpha",
+    "fixedCompetitorAcceptance": 0.945,
+    "sweptPspId": "gamma",
     "rows": [
       {
-        "acceptanceStep": 0.1,
+        "acceptanceStep": 0.75,
         "repeat": 0,
         "choice": "alpha",
-        "gammaProbability": 0
+        "sweptPspProbability": 0
       },
       {
-        "acceptanceStep": 0.1,
+        "acceptanceStep": 0.75,
         "repeat": 1,
         "choice": "alpha",
-        "gammaProbability": 0
+        "sweptPspProbability": 0
       },
       {
-        "acceptanceStep": 0.1,
+        "acceptanceStep": 0.75,
         "repeat": 2,
         "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.2,
-        "repeat": 0,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.2,
-        "repeat": 1,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.2,
-        "repeat": 2,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.3,
-        "repeat": 0,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.3,
-        "repeat": 1,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.3,
-        "repeat": 2,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.4,
-        "repeat": 0,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.4,
-        "repeat": 1,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.4,
-        "repeat": 2,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.5,
-        "repeat": 0,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.5,
-        "repeat": 1,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.5,
-        "repeat": 2,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.6,
-        "repeat": 0,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.6,
-        "repeat": 1,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.6,
-        "repeat": 2,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.7,
-        "repeat": 0,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.7,
-        "repeat": 1,
-        "choice": "alpha",
-        "gammaProbability": 0
-      },
-      {
-        "acceptanceStep": 0.7,
-        "repeat": 2,
-        "choice": "alpha",
-        "gammaProbability": 0
+        "sweptPspProbability": 0
       },
       {
         "acceptanceStep": 0.8,
         "repeat": 0,
         "choice": "alpha",
-        "gammaProbability": 0
+        "sweptPspProbability": 0
       },
       {
         "acceptanceStep": 0.8,
         "repeat": 1,
         "choice": "alpha",
-        "gammaProbability": 0
+        "sweptPspProbability": 0
       },
       {
         "acceptanceStep": 0.8,
         "repeat": 2,
         "choice": "alpha",
-        "gammaProbability": 0
+        "sweptPspProbability": 0
+      },
+      {
+        "acceptanceStep": 0.85,
+        "repeat": 0,
+        "choice": "alpha",
+        "sweptPspProbability": 0.01
+      },
+      {
+        "acceptanceStep": 0.85,
+        "repeat": 1,
+        "choice": "alpha",
+        "sweptPspProbability": 0.01
+      },
+      {
+        "acceptanceStep": 0.85,
+        "repeat": 2,
+        "choice": "alpha",
+        "sweptPspProbability": 0.01
       },
       {
         "acceptanceStep": 0.9,
         "repeat": 0,
         "choice": "alpha",
-        "gammaProbability": 0.01
+        "sweptPspProbability": 0.02
       },
       {
         "acceptanceStep": 0.9,
         "repeat": 1,
         "choice": "alpha",
-        "gammaProbability": 0.01
+        "sweptPspProbability": 0.01
       },
       {
         "acceptanceStep": 0.9,
         "repeat": 2,
         "choice": "alpha",
-        "gammaProbability": 0.01
+        "sweptPspProbability": 0.02
+      },
+      {
+        "acceptanceStep": 0.93,
+        "repeat": 0,
+        "choice": "alpha",
+        "sweptPspProbability": 0.06
+      },
+      {
+        "acceptanceStep": 0.93,
+        "repeat": 1,
+        "choice": "alpha",
+        "sweptPspProbability": 0.05
+      },
+      {
+        "acceptanceStep": 0.93,
+        "repeat": 2,
+        "choice": "alpha",
+        "sweptPspProbability": 0.05
+      },
+      {
+        "acceptanceStep": 0.945,
+        "repeat": 0,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.945,
+        "repeat": 1,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.945,
+        "repeat": 2,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.96,
+        "repeat": 0,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.96,
+        "repeat": 1,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.96,
+        "repeat": 2,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.98,
+        "repeat": 0,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.98,
+        "repeat": 1,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.98,
+        "repeat": 2,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.99,
+        "repeat": 0,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.99,
+        "repeat": 1,
+        "choice": "gamma",
+        "sweptPspProbability": 1
+      },
+      {
+        "acceptanceStep": 0.99,
+        "repeat": 2,
+        "choice": "gamma",
+        "sweptPspProbability": 1
       }
     ]
   },
@@ -336,21 +339,21 @@
         "call": 2,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.94,
-          "beta": 0.02,
-          "gamma": 0.04
+          "alpha": 0.97,
+          "beta": 0.01,
+          "gamma": 0.02
         },
-        "confidence": 0.91
+        "confidence": 0.95
       },
       {
         "call": 3,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.95,
+          "alpha": 0.97,
           "beta": 0.01,
-          "gamma": 0.04
+          "gamma": 0.02
         },
-        "confidence": 0.92
+        "confidence": 0.95
       },
       {
         "call": 4,
@@ -366,26 +369,6 @@
         "call": 5,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.96,
-          "beta": 0.01,
-          "gamma": 0.03
-        },
-        "confidence": 0.94
-      },
-      {
-        "call": 6,
-        "choice": "alpha",
-        "probabilities": {
-          "alpha": 0.95,
-          "beta": 0.01,
-          "gamma": 0.04
-        },
-        "confidence": 0.92
-      },
-      {
-        "call": 7,
-        "choice": "alpha",
-        "probabilities": {
           "alpha": 0.97,
           "beta": 0.01,
           "gamma": 0.02
@@ -393,14 +376,34 @@
         "confidence": 0.95
       },
       {
+        "call": 6,
+        "choice": "alpha",
+        "probabilities": {
+          "alpha": 0.96,
+          "beta": 0.01,
+          "gamma": 0.03
+        },
+        "confidence": 0.94
+      },
+      {
+        "call": 7,
+        "choice": "alpha",
+        "probabilities": {
+          "alpha": 0.96,
+          "beta": 0.01,
+          "gamma": 0.03
+        },
+        "confidence": 0.94
+      },
+      {
         "call": 8,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.94,
-          "beta": 0.02,
-          "gamma": 0.04
+          "alpha": 0.96,
+          "beta": 0.01,
+          "gamma": 0.03
         },
-        "confidence": 0.91
+        "confidence": 0.94
       },
       {
         "call": 9,
@@ -416,21 +419,21 @@
         "call": 10,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.97,
+          "alpha": 0.96,
           "beta": 0.01,
-          "gamma": 0.02
+          "gamma": 0.03
         },
-        "confidence": 0.95
+        "confidence": 0.94
       },
       {
         "call": 11,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.97,
+          "alpha": 0.96,
           "beta": 0.01,
-          "gamma": 0.02
+          "gamma": 0.03
         },
-        "confidence": 0.95
+        "confidence": 0.94
       },
       {
         "call": 12,
@@ -446,24 +449,34 @@
         "call": 13,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.97,
+          "alpha": 0.95,
           "beta": 0.01,
-          "gamma": 0.02
+          "gamma": 0.04
         },
-        "confidence": 0.95
+        "confidence": 0.92
       },
       {
         "call": 14,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.97,
+          "alpha": 0.96,
           "beta": 0.01,
-          "gamma": 0.02
+          "gamma": 0.03
         },
-        "confidence": 0.95
+        "confidence": 0.94
       },
       {
         "call": 15,
+        "choice": "alpha",
+        "probabilities": {
+          "alpha": 0.96,
+          "beta": 0.01,
+          "gamma": 0.03
+        },
+        "confidence": 0.94
+      },
+      {
+        "call": 16,
         "choice": "alpha",
         "probabilities": {
           "alpha": 0.95,
@@ -473,7 +486,7 @@
         "confidence": 0.92
       },
       {
-        "call": 16,
+        "call": 17,
         "choice": "alpha",
         "probabilities": {
           "alpha": 0.97,
@@ -481,16 +494,6 @@
           "gamma": 0.02
         },
         "confidence": 0.95
-      },
-      {
-        "call": 17,
-        "choice": "alpha",
-        "probabilities": {
-          "alpha": 0.96,
-          "beta": 0.01,
-          "gamma": 0.03
-        },
-        "confidence": 0.94
       },
       {
         "call": 18,
@@ -506,11 +509,11 @@
         "call": 19,
         "choice": "alpha",
         "probabilities": {
-          "alpha": 0.95,
+          "alpha": 0.96,
           "beta": 0.01,
-          "gamma": 0.04
+          "gamma": 0.03
         },
-        "confidence": 0.92
+        "confidence": 0.94
       }
     ],
     "distinctChoiceCount": 1
