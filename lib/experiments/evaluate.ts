@@ -35,6 +35,8 @@ export function evaluateRouters(args: {
   rangeEnd: number; // inclusive
   conversionRates: CurrencyConversion;
   routers: Record<string, RouterFn>;
+  /** Sensitivity check (section 9.6): override the chargeback-loss fixed fee assumption. Defaults to fees.ts's constant. */
+  chargebackFixedFeeEUR?: number;
 }): MultiRouterEvaluation {
   const { scenario, seed, streamLength, rangeStart, rangeEnd, conversionRates, routers } = args;
   const stream = generateStream(seed, streamLength, scenario.stream, conversionRates);
@@ -69,7 +71,7 @@ export function evaluateRouters(args: {
       if (!chosenPsp) {
         throw new Error(`Router "${key}" chose PSP "${chosenPspId}" which is not in the eligible set at transaction ${t}`);
       }
-      const outcome = simulatePspOutcome(seed, t, tx, chosenPsp, scenario.world);
+      const outcome = simulatePspOutcome(seed, t, tx, chosenPsp, scenario.world, args.chargebackFixedFeeEUR);
       decisionsByRouter[key]!.push({
         transactionIndex: t,
         chosenPspId,

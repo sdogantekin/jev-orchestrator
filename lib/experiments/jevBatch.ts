@@ -55,6 +55,8 @@ export async function runJevBatchForSeed(args: {
   fixturesDir?: string;
   /** Injectable for tests, so no real network call happens outside an explicit live script. Defaults to the real retry-wrapped client. */
   callClient?: typeof callJevDecisions;
+  /** Sensitivity check (section 9.6): override the chargeback-loss fixed fee assumption. Defaults to fees.ts's constant. */
+  chargebackFixedFeeEUR?: number;
 }): Promise<JevBatchResult> {
   const stream = generateStream(args.seed, STREAM_LENGTH, args.scenario.stream, args.conversionRates);
 
@@ -121,7 +123,7 @@ export async function runJevBatchForSeed(args: {
     }
 
     const chosenPsp = task.eligible.find((p) => p.id === chosenPspId)!;
-    const outcome = simulatePspOutcome(args.seed, task.t, task.tx, chosenPsp, args.scenario.world);
+    const outcome = simulatePspOutcome(args.seed, task.t, task.tx, chosenPsp, args.scenario.world, args.chargebackFixedFeeEUR);
 
     return {
       transactionIndex: task.t,

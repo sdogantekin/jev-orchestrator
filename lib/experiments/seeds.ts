@@ -19,3 +19,10 @@ export const TUNING_SEED_COUNT = 5;
 export function tuningSeeds(scenarioId: string): string[] {
   return Array.from({ length: TUNING_SEED_COUNT }, (_, i) => `${scenarioId}|tuning|${i + 1}`);
 }
+
+/** Section 9.2/9.6: sensitivity runs use 5 seeds on Stable only, distinct from eval and tuning seeds. */
+export const SENSITIVITY_SEED_COUNT = 5;
+
+export function sensitivitySeed(scenarioId: string, variantName: string, seedIndex: number): string {
+  return `${scenarioId}|sensitivity|${variantName}|${seedIndex}`;
+}
