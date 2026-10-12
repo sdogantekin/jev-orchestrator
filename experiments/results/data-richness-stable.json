@@ -1,0 +1,63 @@
+{
+  "scenarioId": "stable",
+  "n": 14000,
+  "levelSummaries": [
+    {
+      "level": 1,
+      "authorizationRate": {
+        "mean": 0.9357857142857143,
+        "lo": 0.9318571428571428,
+        "hi": 0.9397142857142857,
+        "n": 14000
+      },
+      "netCostPerAuthorized": {
+        "mean": 2.174589123047963,
+        "lo": 1.993331664916737,
+        "hi": 2.3965338796302036,
+        "n": 13101
+      },
+      "okCount": 14000,
+      "invalidCount": 0,
+      "failedCount": 0
+    },
+    {
+      "level": 2,
+      "authorizationRate": {
+        "mean": 0.9336428571428571,
+        "lo": 0.9297142857142857,
+        "hi": 0.9377857142857143,
+        "n": 14000
+      },
+      "netCostPerAuthorized": {
+        "mean": 2.1506098881184323,
+        "lo": 1.9490612483759984,
+        "hi": 2.3884950166037506,
+        "n": 13071
+      },
+      "okCount": 14000,
+      "invalidCount": 0,
+      "failedCount": 0
+    },
+    {
+      "level": 3,
+      "authorizationRate": {
+        "mean": 0.9342857142857143,
+        "lo": 0.9303571428571429,
+        "hi": 0.9385,
+        "n": 14000
+      },
+      "netCostPerAuthorized": {
+        "mean": 2.14997883647344,
+        "lo": 1.9428015018981757,
+        "hi": 2.3978529314381087,
+        "n": 13080
+      },
+      "okCount": 14000,
+      "invalidCount": 0,
+      "failedCount": 0
+    }
+  ],
+  "choiceDiff12": 3061,
+  "choiceDiff23": 577,
+  "choiceDiff13": 3233
+}

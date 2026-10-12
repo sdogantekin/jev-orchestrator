@@ -10,7 +10,8 @@
     "batch": "tsx experiments/scripts/run-batch.ts",
     "pilot": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/pilot.ts",
     "probes": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-probes.ts",
-    "jev-main-batch": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-jev-main-batch.ts"
+    "jev-main-batch": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-jev-main-batch.ts",
+    "data-richness": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-data-richness.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
