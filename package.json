@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "c1-report": "tsx experiments/scripts/c1-report.ts",
@@ -15,12 +18,19 @@
     "sensitivity": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-sensitivity.ts"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.10.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
     "tsx": "^4.19.0",
     "typescript": "^5.6.3",
     "vitest": "^5.0.3"
   },
   "dependencies": {
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "zod": "^3.23.8"
   }
 }
