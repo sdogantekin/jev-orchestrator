@@ -8,7 +8,9 @@
     "test:watch": "vitest",
     "c1-report": "tsx experiments/scripts/c1-report.ts",
     "batch": "tsx experiments/scripts/run-batch.ts",
-    "pilot": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/pilot.ts"
+    "pilot": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/pilot.ts",
+    "probes": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-probes.ts",
+    "jev-main-batch": "node --env-file=.env ./node_modules/.bin/tsx experiments/scripts/run-jev-main-batch.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

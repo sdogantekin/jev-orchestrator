@@ -1,0 +1,98 @@
+{
+  "scenarioId": "cold_start",
+  "tunedR2Params": {
+    "preferredForEuCard": "beta",
+    "preferredForUsd": "alpha",
+    "preferredDefault": "gamma",
+    "largeThreshold": 600,
+    "smallThreshold": 20,
+    "safetyAvailabilityThreshold": 0.98,
+    "safetyAcceptanceThreshold": 0.85
+  },
+  "singleEligibleCount": 0,
+  "zeroEligibleCount": 0,
+  "summary": {
+    "n": 14000,
+    "jevAuthorizationRate": {
+      "mean": 0.9334285714285714,
+      "lo": 0.9292142857142857,
+      "hi": 0.9373571428571429,
+      "n": 14000
+    },
+    "r2AuthorizationRate": {
+      "mean": 0.9431428571428572,
+      "lo": 0.9391428571428572,
+      "hi": 0.9469285714285715,
+      "n": 14000
+    },
+    "jevNetCostPerAuthorized": {
+      "mean": 2.0108829296734463,
+      "lo": 1.899178652610814,
+      "hi": 2.1485445964067873,
+      "n": 13068
+    },
+    "r2NetCostPerAuthorized": {
+      "mean": 2.049092667956331,
+      "lo": 1.874428364055891,
+      "hi": 2.260931857921342,
+      "n": 13204
+    },
+    "jevAverageCallLatencyMs": 269.38757142857145,
+    "jevWorstCallLatencyMs": 1238,
+    "jevAverageCostPerLiveCall": 0.000059632907999999646,
+    "jevLiveCallCount": 14000,
+    "jevOkCount": 14000,
+    "jevInvalidCount": 0,
+    "jevFailedCount": 0,
+    "jevFallbackRate": 0,
+    "disagreementRate": 0.47664285714285715,
+    "disagreementCount": 6673,
+    "onDisagreement": {
+      "jevWins": 2052,
+      "r2Wins": 4582,
+      "ties": 39
+    },
+    "confidenceHistogram": [
+      {
+        "bucketStart": 0,
+        "count": 229
+      },
+      {
+        "bucketStart": 0.1,
+        "count": 601
+      },
+      {
+        "bucketStart": 0.2,
+        "count": 1078
+      },
+      {
+        "bucketStart": 0.3,
+        "count": 1305
+      },
+      {
+        "bucketStart": 0.4,
+        "count": 1411
+      },
+      {
+        "bucketStart": 0.5,
+        "count": 1634
+      },
+      {
+        "bucketStart": 0.6,
+        "count": 1733
+      },
+      {
+        "bucketStart": 0.7,
+        "count": 1969
+      },
+      {
+        "bucketStart": 0.8,
+        "count": 2010
+      },
+      {
+        "bucketStart": 0.9,
+        "count": 2030
+      }
+    ]
+  }
+}

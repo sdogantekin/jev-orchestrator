@@ -1,0 +1,98 @@
+{
+  "scenarioId": "eligibility_mix",
+  "tunedR2Params": {
+    "preferredForEuCard": "beta",
+    "preferredForUsd": "alpha",
+    "preferredDefault": "alpha",
+    "largeThreshold": 600,
+    "smallThreshold": 30,
+    "safetyAvailabilityThreshold": 0.99,
+    "safetyAcceptanceThreshold": 0.85
+  },
+  "singleEligibleCount": 0,
+  "zeroEligibleCount": 0,
+  "summary": {
+    "n": 14000,
+    "jevAuthorizationRate": {
+      "mean": 0.9279285714285714,
+      "lo": 0.9236428571428571,
+      "hi": 0.9322142857142857,
+      "n": 14000
+    },
+    "r2AuthorizationRate": {
+      "mean": 0.9398571428571428,
+      "lo": 0.936,
+      "hi": 0.9438571428571428,
+      "n": 14000
+    },
+    "jevNetCostPerAuthorized": {
+      "mean": 2.014772662679893,
+      "lo": 1.870294273981691,
+      "hi": 2.1961686903179,
+      "n": 12991
+    },
+    "r2NetCostPerAuthorized": {
+      "mean": 2.0483733085147393,
+      "lo": 1.9093009067534248,
+      "hi": 2.2387440372458607,
+      "n": 13158
+    },
+    "jevAverageCallLatencyMs": 274.79207142857143,
+    "jevWorstCallLatencyMs": 924,
+    "jevAverageCostPerLiveCall": 0.0000593258819999994,
+    "jevLiveCallCount": 14000,
+    "jevOkCount": 14000,
+    "jevInvalidCount": 0,
+    "jevFailedCount": 0,
+    "jevFallbackRate": 0,
+    "disagreementRate": 0.4997142857142857,
+    "disagreementCount": 6996,
+    "onDisagreement": {
+      "jevWins": 3682,
+      "r2Wins": 3283,
+      "ties": 31
+    },
+    "confidenceHistogram": [
+      {
+        "bucketStart": 0,
+        "count": 136
+      },
+      {
+        "bucketStart": 0.1,
+        "count": 250
+      },
+      {
+        "bucketStart": 0.2,
+        "count": 627
+      },
+      {
+        "bucketStart": 0.3,
+        "count": 1064
+      },
+      {
+        "bucketStart": 0.4,
+        "count": 1255
+      },
+      {
+        "bucketStart": 0.5,
+        "count": 1688
+      },
+      {
+        "bucketStart": 0.6,
+        "count": 1936
+      },
+      {
+        "bucketStart": 0.7,
+        "count": 2376
+      },
+      {
+        "bucketStart": 0.8,
+        "count": 2417
+      },
+      {
+        "bucketStart": 0.9,
+        "count": 2251
+      }
+    ]
+  }
+}

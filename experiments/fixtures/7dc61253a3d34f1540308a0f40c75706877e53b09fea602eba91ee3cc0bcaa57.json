@@ -1,0 +1,22 @@
+{
+  "model": "typesafe/jev-1.13-20260917",
+  "answers": {
+    "psp_selection": {
+      "type": "choice",
+      "choice": "gamma",
+      "probabilities": {
+        "alpha": 0.14,
+        "beta": 0,
+        "gamma": 0.86
+      },
+      "confidence": 0.79
+    }
+  },
+  "usage": {
+    "input_tokens": 1487,
+    "output_tokens": 40,
+    "cost": 0.000062454
+  },
+  "id": "gen-dec-1791793939-rU2lYg0eV59e0NurZbZq",
+  "provider": "TypeSafe"
+}
