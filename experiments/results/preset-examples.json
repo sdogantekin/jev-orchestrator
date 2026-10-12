@@ -1,0 +1,3434 @@
+{
+  "stable": {
+    "disagreement": {
+      "scenarioId": "stable",
+      "transactionIndex": 302,
+      "transaction": {
+        "index": 302,
+        "amount": 43.63863982940916,
+        "amountEUR": 51.057208600408714,
+        "amountBucket": "medium",
+        "currency": "GBP",
+        "country": "UK",
+        "paymentMethod": "card",
+        "cardScheme": "visa",
+        "device": "mobile",
+        "customerType": "returning",
+        "threeDsEligible": true
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9496402877697842,
+            "sampleSize": 139
+          },
+          "acceptanceSegment": {
+            "value": 0.6,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 139
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 132
+          },
+          "averageLatencyMs": {
+            "value": 419.6917889163082,
+            "sampleSize": 139
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9337748344370861,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 141
+          },
+          "averageLatencyMs": {
+            "value": 291.2673041856772,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.8793103448275862,
+            "sampleSize": 116
+          },
+          "acceptanceSegment": {
+            "value": 0.8,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 116
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 102
+          },
+          "averageLatencyMs": {
+            "value": 248.85382407564805,
+            "sampleSize": 116
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 51.06,
+            "currency": "GBP",
+            "country": "UK",
+            "payment_method": "card",
+            "card_scheme": "visa",
+            "device": "mobile",
+            "customer_type": "returning",
+            "three_ds_eligible": true,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 0.9137,
+              "acceptance_rate_overall": 0.9496402877697842,
+              "acceptance_rate_overall_sample_size": 139,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 139,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 132,
+              "average_latency_ms": 419.6917889163082,
+              "average_latency_ms_sample_size": 139,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 0.6,
+              "acceptance_rate_segment_sample_size": 5
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.7616,
+              "acceptance_rate_overall": 0.9337748344370861,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 141,
+              "average_latency_ms": 291.2673041856772,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 5
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.6095,
+              "acceptance_rate_overall": 0.8793103448275862,
+              "acceptance_rate_overall_sample_size": 116,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 116,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 102,
+              "average_latency_ms": 248.85382407564805,
+              "average_latency_ms_sample_size": 116,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 0.8,
+              "acceptance_rate_segment_sample_size": 5
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "beta",
+            "probabilities": {
+              "alpha": 0.02,
+              "beta": 0.94,
+              "gamma": 0.04
+            },
+            "confidence": 0.91
+          }
+        },
+        "usage": {
+          "input_tokens": 1471,
+          "output_tokens": 40,
+          "cost": 0.000061782
+        },
+        "id": "gen-dec-1791792299-cd6pfAQowpMEThOWofF7",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "beta",
+      "jevProbabilities": {
+        "alpha": 0.02,
+        "beta": 0.94,
+        "gamma": 0.04
+      },
+      "jevConfidence": 0.91,
+      "r1Choice": "alpha",
+      "r2Choice": "gamma",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 364.2835379248941,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 0.9137437118053133,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.9137437118053133
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 308.57578273685914,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.93,
+          "feeEUR": 0.761629294604496,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.761629294604496
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 296.062512917765,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.92,
+          "feeEUR": 0.6095148774036785,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.6095148774036785
+        }
+      }
+    },
+    "agreement": {
+      "scenarioId": "stable",
+      "transactionIndex": 300,
+      "transaction": {
+        "index": 300,
+        "amount": 67.02566760890961,
+        "amountEUR": 67.02566760890961,
+        "amountBucket": "medium",
+        "currency": "EUR",
+        "country": "FR",
+        "paymentMethod": "paypal",
+        "cardScheme": null,
+        "device": "desktop",
+        "customerType": "returning",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9496402877697842,
+            "sampleSize": 139
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 139
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 132
+          },
+          "averageLatencyMs": {
+            "value": 420.02949523697976,
+            "sampleSize": 139
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9271523178807947,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 140
+          },
+          "averageLatencyMs": {
+            "value": 291.6347975449416,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 67.03,
+            "currency": "EUR",
+            "country": "FR",
+            "payment_method": "paypal",
+            "card_scheme": null,
+            "device": "desktop",
+            "customer_type": "returning",
+            "three_ds_eligible": false,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 1.1213,
+              "acceptance_rate_overall": 0.9496402877697842,
+              "acceptance_rate_overall_sample_size": 139,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 139,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 132,
+              "average_latency_ms": 420.02949523697976,
+              "average_latency_ms_sample_size": 139,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.9373,
+              "acceptance_rate_overall": 0.9271523178807947,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 140,
+              "average_latency_ms": 291.6347975449416,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "alpha",
+            "probabilities": {
+              "alpha": 0.76,
+              "beta": 0.24
+            },
+            "confidence": 0.52
+          }
+        },
+        "usage": {
+          "input_tokens": 1235,
+          "output_tokens": 33,
+          "cost": 0.00005187
+        },
+        "id": "gen-dec-1791792298-TVszorgQvsbt2aYUFoQx",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "alpha",
+      "jevProbabilities": {
+        "alpha": 0.76,
+        "beta": 0.24
+      },
+      "jevConfidence": 0.52,
+      "r1Choice": "alpha",
+      "r2Choice": "alpha",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 439.90160821766597,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 1.121333678915825,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 1.121333678915825
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 270.52245148887886,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.93,
+          "feeEUR": 0.9372823436980058,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.9372823436980058
+        }
+      }
+    }
+  },
+  "drift": {
+    "disagreement": {
+      "scenarioId": "drift",
+      "transactionIndex": 300,
+      "transaction": {
+        "index": 300,
+        "amount": 36.5440430705002,
+        "amountEUR": 36.5440430705002,
+        "amountBucket": "medium",
+        "currency": "EUR",
+        "country": "NL",
+        "paymentMethod": "card",
+        "cardScheme": "mastercard",
+        "device": "desktop",
+        "customerType": "returning",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9655172413793104,
+            "sampleSize": 145
+          },
+          "acceptanceSegment": {
+            "value": 0.5,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 145
+          },
+          "chargebackOverall": {
+            "value": 0.007142857142857143,
+            "sampleSize": 140
+          },
+          "averageLatencyMs": {
+            "value": 420.37969894397867,
+            "sampleSize": 145
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9205298013245033,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 0.9933774834437086,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 139
+          },
+          "averageLatencyMs": {
+            "value": 289.0205263567986,
+            "sampleSize": 150
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.9217391304347826,
+            "sampleSize": 115
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 115
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 106
+          },
+          "averageLatencyMs": {
+            "value": 253.1238782936598,
+            "sampleSize": 115
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 36.54,
+            "currency": "EUR",
+            "country": "NL",
+            "payment_method": "card",
+            "card_scheme": "mastercard",
+            "device": "desktop",
+            "customer_type": "returning",
+            "three_ds_eligible": false,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 0.7251,
+              "acceptance_rate_overall": 0.9655172413793104,
+              "acceptance_rate_overall_sample_size": 145,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 145,
+              "chargeback_rate_overall": 0.007142857142857143,
+              "chargeback_rate_overall_sample_size": 140,
+              "average_latency_ms": 420.37969894397867,
+              "average_latency_ms_sample_size": 145,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 0.5,
+              "acceptance_rate_segment_sample_size": 2
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.602,
+              "acceptance_rate_overall": 0.9205298013245033,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 0.9933774834437086,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 139,
+              "average_latency_ms": 289.0205263567986,
+              "average_latency_ms_sample_size": 150,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.4789,
+              "acceptance_rate_overall": 0.9217391304347826,
+              "acceptance_rate_overall_sample_size": 115,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 115,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 106,
+              "average_latency_ms": 253.1238782936598,
+              "average_latency_ms_sample_size": 115,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "gamma",
+            "probabilities": {
+              "alpha": 0.08,
+              "beta": 0.28,
+              "gamma": 0.64
+            },
+            "confidence": 0.46
+          }
+        },
+        "usage": {
+          "input_tokens": 1506,
+          "output_tokens": 40,
+          "cost": 0.000063252
+        },
+        "id": "gen-dec-1791793904-Y4fTr31RWFDubG7IxyZK",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "gamma",
+      "jevProbabilities": {
+        "alpha": 0.08,
+        "beta": 0.28,
+        "gamma": 0.64
+      },
+      "jevConfidence": 0.46,
+      "r1Choice": "beta",
+      "r2Choice": "beta",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 365.5308703235809,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 0.7250725599165027,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.7250725599165027
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": false,
+          "latencyMs": 243.263144152957,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.9750000000000001,
+          "feeEUR": 0,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": false,
+          "latencyMs": 273.4175323592409,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.92,
+          "feeEUR": 0,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0
+        }
+      }
+    },
+    "agreement": {
+      "scenarioId": "drift",
+      "transactionIndex": 301,
+      "transaction": {
+        "index": 301,
+        "amount": 62.587124229967394,
+        "amountEUR": 73.22693534906185,
+        "amountBucket": "medium",
+        "currency": "GBP",
+        "country": "UK",
+        "paymentMethod": "paypal",
+        "cardScheme": null,
+        "device": "desktop",
+        "customerType": "new",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9655172413793104,
+            "sampleSize": 145
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 3
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 145
+          },
+          "chargebackOverall": {
+            "value": 0.007142857142857143,
+            "sampleSize": 140
+          },
+          "averageLatencyMs": {
+            "value": 421.20004572205505,
+            "sampleSize": 145
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9205298013245033,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 3
+          },
+          "availabilityOverall": {
+            "value": 0.9933774834437086,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 139
+          },
+          "averageLatencyMs": {
+            "value": 289.18619312257795,
+            "sampleSize": 150
+          },
+          "retrySuccessRate": 0.38
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 73.23,
+            "currency": "GBP",
+            "country": "UK",
+            "payment_method": "paypal",
+            "card_scheme": null,
+            "device": "desktop",
+            "customer_type": "new",
+            "three_ds_eligible": false,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 1.202,
+              "acceptance_rate_overall": 0.9655172413793104,
+              "acceptance_rate_overall_sample_size": 145,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 145,
+              "chargeback_rate_overall": 0.007142857142857143,
+              "chargeback_rate_overall_sample_size": 140,
+              "average_latency_ms": 421.20004572205505,
+              "average_latency_ms_sample_size": 145,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 3
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 1.0055,
+              "acceptance_rate_overall": 0.9205298013245033,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 0.9933774834437086,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 139,
+              "average_latency_ms": 289.18619312257795,
+              "average_latency_ms_sample_size": 150,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 3
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "alpha",
+            "probabilities": {
+              "alpha": 0.85,
+              "beta": 0.15
+            },
+            "confidence": 0.7
+          }
+        },
+        "usage": {
+          "input_tokens": 1269,
+          "output_tokens": 33,
+          "cost": 0.000053298
+        },
+        "id": "gen-dec-1791793904-5yQ62UGXT1PH6r5QnuNr",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "alpha",
+      "jevProbabilities": {
+        "alpha": 0.85,
+        "beta": 0.15
+      },
+      "jevConfidence": 0.7,
+      "r1Choice": "alpha",
+      "r2Choice": "alpha",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 428.4677726428491,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 1.201950159537804,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 1.201950159537804
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 338.8924236768595,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.93,
+          "feeEUR": 1.0054962888396803,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 1.0054962888396803
+        }
+      }
+    }
+  },
+  "thin_data": {
+    "disagreement": {
+      "scenarioId": "thin_data",
+      "transactionIndex": 300,
+      "transaction": {
+        "index": 300,
+        "amount": 23.120971344961838,
+        "amountEUR": 27.05153647360535,
+        "amountBucket": "small",
+        "currency": "GBP",
+        "country": "UK",
+        "paymentMethod": "paypal",
+        "cardScheme": null,
+        "device": "mobile",
+        "customerType": "returning",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.95,
+            "sampleSize": 140
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 140
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 133
+          },
+          "averageLatencyMs": {
+            "value": 416.50148523423724,
+            "sampleSize": 140
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9139072847682119,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 0.9933774834437086,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 138
+          },
+          "averageLatencyMs": {
+            "value": 292.59310246965936,
+            "sampleSize": 150
+          },
+          "retrySuccessRate": 0.38
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 27.05,
+            "currency": "GBP",
+            "country": "UK",
+            "payment_method": "paypal",
+            "card_scheme": null,
+            "device": "mobile",
+            "customer_type": "returning",
+            "three_ds_eligible": false,
+            "amount_bucket": "small"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 0.6017,
+              "acceptance_rate_overall": 0.95,
+              "acceptance_rate_overall_sample_size": 140,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 140,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 133,
+              "average_latency_ms": 416.50148523423724,
+              "average_latency_ms_sample_size": 140,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.4976,
+              "acceptance_rate_overall": 0.9139072847682119,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 0.9933774834437086,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 138,
+              "average_latency_ms": 292.59310246965936,
+              "average_latency_ms_sample_size": 150,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "alpha",
+            "probabilities": {
+              "alpha": 0.82,
+              "beta": 0.18
+            },
+            "confidence": 0.64
+          }
+        },
+        "usage": {
+          "input_tokens": 1239,
+          "output_tokens": 33,
+          "cost": 0.000052038
+        },
+        "id": "gen-dec-1791794184-yQKsxxPsrJuGEnqvf2n6",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "alpha",
+      "jevProbabilities": {
+        "alpha": 0.82,
+        "beta": 0.18
+      },
+      "jevConfidence": 0.64,
+      "r1Choice": "beta",
+      "r2Choice": "beta",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 446.23919515946704,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 0.6016699741568696,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.6016699741568696
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 316.4734320796672,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.93,
+          "feeEUR": 0.4975669012096589,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.4975669012096589
+        }
+      }
+    },
+    "agreement": {
+      "scenarioId": "thin_data",
+      "transactionIndex": 303,
+      "transaction": {
+        "index": 303,
+        "amount": 44.47589905307363,
+        "amountEUR": 41.36258611935848,
+        "amountBucket": "medium",
+        "currency": "USD",
+        "country": "US",
+        "paymentMethod": "card",
+        "cardScheme": "mastercard",
+        "device": "mobile",
+        "customerType": "new",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9568345323741008,
+            "sampleSize": 139
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 19
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 139
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 133
+          },
+          "averageLatencyMs": {
+            "value": 417.29460107721565,
+            "sampleSize": 139
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9139072847682119,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 19
+          },
+          "availabilityOverall": {
+            "value": 0.9933774834437086,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 138
+          },
+          "averageLatencyMs": {
+            "value": 293.0500435103749,
+            "sampleSize": 150
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.9380530973451328,
+            "sampleSize": 113
+          },
+          "acceptanceSegment": {
+            "value": 0.9473684210526315,
+            "sampleSize": 19
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 113
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 106
+          },
+          "averageLatencyMs": {
+            "value": 246.76624616708256,
+            "sampleSize": 113
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 41.36,
+            "currency": "USD",
+            "country": "US",
+            "payment_method": "card",
+            "card_scheme": "mastercard",
+            "device": "mobile",
+            "customer_type": "new",
+            "three_ds_eligible": false,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 0.7877,
+              "acceptance_rate_overall": 0.9568345323741008,
+              "acceptance_rate_overall_sample_size": 139,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 139,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 133,
+              "average_latency_ms": 417.29460107721565,
+              "average_latency_ms_sample_size": 139,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 19
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.655,
+              "acceptance_rate_overall": 0.9139072847682119,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 0.9933774834437086,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 138,
+              "average_latency_ms": 293.0500435103749,
+              "average_latency_ms_sample_size": 150,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 19
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.5223,
+              "acceptance_rate_overall": 0.9380530973451328,
+              "acceptance_rate_overall_sample_size": 113,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 113,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 106,
+              "average_latency_ms": 246.76624616708256,
+              "average_latency_ms_sample_size": 113,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 0.9473684210526315,
+              "acceptance_rate_segment_sample_size": 19
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "alpha",
+            "probabilities": {
+              "alpha": 0.69,
+              "beta": 0.03,
+              "gamma": 0.28
+            },
+            "confidence": 0.53
+          }
+        },
+        "usage": {
+          "input_tokens": 1504,
+          "output_tokens": 40,
+          "cost": 0.000063168
+        },
+        "id": "gen-dec-1791794184-sgQU05BclsQqaCHnUsG3",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "alpha",
+      "jevProbabilities": {
+        "alpha": 0.69,
+        "beta": 0.03,
+        "gamma": 0.28
+      },
+      "jevConfidence": 0.53,
+      "r1Choice": "alpha",
+      "r2Choice": "alpha",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 409.07989214457405,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 0.7877136195516603,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.7877136195516603
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 233.67879271006137,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.86,
+          "feeEUR": 0.6549884473129434,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.6549884473129434
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 251.59100096760457,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.92,
+          "feeEUR": 0.5222632750742264,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.5222632750742264
+        }
+      }
+    }
+  },
+  "cold_start": {
+    "disagreement": {
+      "scenarioId": "cold_start",
+      "transactionIndex": 311,
+      "transaction": {
+        "index": 311,
+        "amount": 90.63424583170293,
+        "amountEUR": 90.63424583170293,
+        "amountBucket": "medium",
+        "currency": "EUR",
+        "country": "DE",
+        "paymentMethod": "sepa_debit",
+        "cardScheme": null,
+        "device": "desktop",
+        "customerType": "new",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9403973509933775,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 3
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 142
+          },
+          "averageLatencyMs": {
+            "value": 288.36063159299533,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.95,
+            "sampleSize": 20
+          },
+          "acceptanceSegment": {
+            "value": 0.8,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 20
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 19
+          },
+          "averageLatencyMs": {
+            "value": 246.8506641178868,
+            "sampleSize": 20
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 90.63,
+            "currency": "EUR",
+            "country": "DE",
+            "payment_method": "sepa_debit",
+            "card_scheme": null,
+            "device": "desktop",
+            "customer_type": "new",
+            "three_ds_eligible": false,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 1.197,
+              "acceptance_rate_overall": 0.9403973509933775,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 142,
+              "average_latency_ms": 288.36063159299533,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 3
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.9657,
+              "acceptance_rate_overall": 0.95,
+              "acceptance_rate_overall_sample_size": 20,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 20,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 19,
+              "average_latency_ms": 246.8506641178868,
+              "average_latency_ms_sample_size": 20,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 0.8,
+              "acceptance_rate_segment_sample_size": 5
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "beta",
+            "probabilities": {
+              "beta": 0.93,
+              "gamma": 0.07
+            },
+            "confidence": 0.86
+          }
+        },
+        "usage": {
+          "input_tokens": 1220,
+          "output_tokens": 33,
+          "cost": 0.00005124
+        },
+        "id": "gen-dec-1791794464-2OH3JrcOYKCSlTXuRCxi",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "beta",
+      "jevProbabilities": {
+        "beta": 0.93,
+        "gamma": 0.07
+      },
+      "jevConfidence": 0.86,
+      "r1Choice": "gamma",
+      "r2Choice": "gamma",
+      "outcomesByPsp": {
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 236.1361214012097,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.93,
+          "feeEUR": 1.1969767041487323,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 1.1969767041487323
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 250.37084442143674,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.92,
+          "feeEUR": 0.9657082124853265,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.9657082124853265
+        }
+      }
+    },
+    "agreement": {
+      "scenarioId": "cold_start",
+      "transactionIndex": 300,
+      "transaction": {
+        "index": 300,
+        "amount": 57.60060599165645,
+        "amountEUR": 57.60060599165645,
+        "amountBucket": "medium",
+        "currency": "EUR",
+        "country": "NL",
+        "paymentMethod": "card",
+        "cardScheme": "mastercard",
+        "device": "mobile",
+        "customerType": "new",
+        "threeDsEligible": true
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9452054794520548,
+            "sampleSize": 146
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 12
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 146
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 138
+          },
+          "averageLatencyMs": {
+            "value": 418.62441016377744,
+            "sampleSize": 146
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9536423841059603,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 12
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 144
+          },
+          "averageLatencyMs": {
+            "value": 290.2007664391064,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.95,
+            "sampleSize": 20
+          },
+          "acceptanceSegment": {
+            "value": 0.8125,
+            "sampleSize": 16
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 20
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 19
+          },
+          "averageLatencyMs": {
+            "value": 248.47971812081795,
+            "sampleSize": 20
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 57.6,
+            "currency": "EUR",
+            "country": "NL",
+            "payment_method": "card",
+            "card_scheme": "mastercard",
+            "device": "mobile",
+            "customer_type": "new",
+            "three_ds_eligible": true,
+            "amount_bucket": "medium"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 0.9988,
+              "acceptance_rate_overall": 0.9452054794520548,
+              "acceptance_rate_overall_sample_size": 146,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 146,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 138,
+              "average_latency_ms": 418.62441016377744,
+              "average_latency_ms_sample_size": 146,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 12
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.8336,
+              "acceptance_rate_overall": 0.9536423841059603,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 144,
+              "average_latency_ms": 290.2007664391064,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 12
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.6684,
+              "acceptance_rate_overall": 0.95,
+              "acceptance_rate_overall_sample_size": 20,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 20,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 19,
+              "average_latency_ms": 248.47971812081795,
+              "average_latency_ms_sample_size": 20,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 0.8125,
+              "acceptance_rate_segment_sample_size": 16
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "beta",
+            "probabilities": {
+              "alpha": 0.01,
+              "beta": 0.96,
+              "gamma": 0.03
+            },
+            "confidence": 0.94
+          }
+        },
+        "usage": {
+          "input_tokens": 1457,
+          "output_tokens": 40,
+          "cost": 0.000061194
+        },
+        "id": "gen-dec-1791794464-MvQOMucOkTHuobhYqKLs",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "beta",
+      "jevProbabilities": {
+        "alpha": 0.01,
+        "beta": 0.96,
+        "gamma": 0.03
+      },
+      "jevConfidence": 0.94,
+      "r1Choice": "beta",
+      "r2Choice": "beta",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 442.9042072897272,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 0.9988078778915339,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.9988078778915339
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 277.65924260801705,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.9550000000000001,
+          "feeEUR": 0.8336066659082211,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.8336066659082211
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 215.65758000041455,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.92,
+          "feeEUR": 0.6684054539249081,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.6684054539249081
+        }
+      }
+    }
+  },
+  "conflicting_objectives": {
+    "disagreement": {
+      "scenarioId": "conflicting_objectives",
+      "transactionIndex": 305,
+      "transaction": {
+        "index": 305,
+        "amount": 13.730901480773792,
+        "amountEUR": 13.730901480773792,
+        "amountBucket": "small",
+        "currency": "EUR",
+        "country": "FR",
+        "paymentMethod": "sepa_debit",
+        "cardScheme": null,
+        "device": "mobile",
+        "customerType": "new",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9602649006622517,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 145
+          },
+          "averageLatencyMs": {
+            "value": 288.3951543782835,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.9074074074074074,
+            "sampleSize": 108
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 2
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 108
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 98
+          },
+          "averageLatencyMs": {
+            "value": 255.21987662420707,
+            "sampleSize": 108
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 13.73,
+            "currency": "EUR",
+            "country": "FR",
+            "payment_method": "sepa_debit",
+            "card_scheme": null,
+            "device": "mobile",
+            "customer_type": "new",
+            "three_ds_eligible": false,
+            "amount_bucket": "small"
+          },
+          "psps": [
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.351,
+              "acceptance_rate_overall": 0.9602649006622517,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 145,
+              "average_latency_ms": 288.3951543782835,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.2736,
+              "acceptance_rate_overall": 0.9074074074074074,
+              "acceptance_rate_overall_sample_size": 108,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 108,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 98,
+              "average_latency_ms": 255.21987662420707,
+              "average_latency_ms_sample_size": 108,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 2
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "beta",
+            "probabilities": {
+              "beta": 0.85,
+              "gamma": 0.15
+            },
+            "confidence": 0.7
+          }
+        },
+        "usage": {
+          "input_tokens": 1235,
+          "output_tokens": 33,
+          "cost": 0.00005187
+        },
+        "id": "gen-dec-1791794748-31EPZ70GbDY8zzQ2ArcU",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "beta",
+      "jevProbabilities": {
+        "beta": 0.85,
+        "gamma": 0.15
+      },
+      "jevConfidence": 0.7,
+      "r1Choice": "gamma",
+      "r2Choice": "gamma",
+      "outcomesByPsp": {
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 281.77732619368413,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.9249999999999999,
+          "feeEUR": 0.3510399162885117,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.3510399162885117
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 272.25523144007127,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.915,
+          "feeEUR": 0.27357811332696413,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.27357811332696413
+        }
+      }
+    },
+    "agreement": {
+      "scenarioId": "conflicting_objectives",
+      "transactionIndex": 300,
+      "transaction": {
+        "index": 300,
+        "amount": 18.617678752581007,
+        "amountEUR": 17.314441239900336,
+        "amountBucket": "small",
+        "currency": "USD",
+        "country": "US",
+        "paymentMethod": "card",
+        "cardScheme": "visa",
+        "device": "mobile",
+        "customerType": "new",
+        "threeDsEligible": true
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9657534246575342,
+            "sampleSize": 146
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 16
+          },
+          "availabilityOverall": {
+            "value": 0.9931506849315068,
+            "sampleSize": 146
+          },
+          "chargebackOverall": {
+            "value": 0.0070921985815602835,
+            "sampleSize": 141
+          },
+          "averageLatencyMs": {
+            "value": 413.94241091776934,
+            "sampleSize": 145
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.9602649006622517,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 0.875,
+            "sampleSize": 16
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 145
+          },
+          "averageLatencyMs": {
+            "value": 288.1892832621156,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.9074074074074074,
+            "sampleSize": 108
+          },
+          "acceptanceSegment": {
+            "value": 0.8125,
+            "sampleSize": 16
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 108
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 98
+          },
+          "averageLatencyMs": {
+            "value": 254.68851542087282,
+            "sampleSize": 108
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 17.31,
+            "currency": "USD",
+            "country": "US",
+            "payment_method": "card",
+            "card_scheme": "visa",
+            "device": "mobile",
+            "customer_type": "new",
+            "three_ds_eligible": true,
+            "amount_bucket": "small"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.3,
+              "cost_percent": 2,
+              "expected_fee_eur": 0.6463,
+              "acceptance_rate_overall": 0.9657534246575342,
+              "acceptance_rate_overall_sample_size": 146,
+              "availability_rate_overall": 0.9931506849315068,
+              "availability_rate_overall_sample_size": 146,
+              "chargeback_rate_overall": 0.0070921985815602835,
+              "chargeback_rate_overall_sample_size": 141,
+              "average_latency_ms": 413.94241091776934,
+              "average_latency_ms_sample_size": 145,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 16
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.3905,
+              "acceptance_rate_overall": 0.9602649006622517,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 145,
+              "average_latency_ms": 288.1892832621156,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 0.875,
+              "acceptance_rate_segment_sample_size": 16
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.3058,
+              "acceptance_rate_overall": 0.9074074074074074,
+              "acceptance_rate_overall_sample_size": 108,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 108,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 98,
+              "average_latency_ms": 254.68851542087282,
+              "average_latency_ms_sample_size": 108,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 0.8125,
+              "acceptance_rate_segment_sample_size": 16
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "alpha",
+            "probabilities": {
+              "alpha": 0.69,
+              "beta": 0.28,
+              "gamma": 0.03
+            },
+            "confidence": 0.53
+          }
+        },
+        "usage": {
+          "input_tokens": 1511,
+          "output_tokens": 40,
+          "cost": 0.000063462
+        },
+        "id": "gen-dec-1791794748-TybyHexY1vYZaga607yY",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "alpha",
+      "jevProbabilities": {
+        "alpha": 0.69,
+        "beta": 0.28,
+        "gamma": 0.03
+      },
+      "jevConfidence": 0.53,
+      "r1Choice": "alpha",
+      "r2Choice": "alpha",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 395.2135500868749,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.955,
+          "feeEUR": 0.6462888247980068,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.6462888247980068
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 293.00964630436954,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.8749999999999999,
+          "feeEUR": 0.39045885363890376,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.39045885363890376
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 247.27445434699257,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.915,
+          "feeEUR": 0.30582997115910304,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.30582997115910304
+        }
+      }
+    }
+  },
+  "eligibility_mix": {
+    "disagreement": {
+      "scenarioId": "eligibility_mix",
+      "transactionIndex": 304,
+      "transaction": {
+        "index": 304,
+        "amount": 507.69226371938225,
+        "amountEUR": 593.9999485516772,
+        "amountBucket": "large",
+        "currency": "GBP",
+        "country": "UK",
+        "paymentMethod": "card",
+        "cardScheme": "visa",
+        "device": "mobile",
+        "customerType": "returning",
+        "threeDsEligible": true
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9790209790209791,
+            "sampleSize": 143
+          },
+          "acceptanceSegment": {
+            "value": 0.8,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 143
+          },
+          "chargebackOverall": {
+            "value": 0.007142857142857143,
+            "sampleSize": 140
+          },
+          "averageLatencyMs": {
+            "value": 422.87334825647633,
+            "sampleSize": 143
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.8940397350993378,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 0.8,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0.007407407407407408,
+            "sampleSize": 135
+          },
+          "averageLatencyMs": {
+            "value": 289.7638155892974,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.9043478260869565,
+            "sampleSize": 115
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 5
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 115
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 104
+          },
+          "averageLatencyMs": {
+            "value": 253.50612414986023,
+            "sampleSize": 115
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 594,
+            "currency": "GBP",
+            "country": "UK",
+            "payment_method": "card",
+            "card_scheme": "visa",
+            "device": "mobile",
+            "customer_type": "returning",
+            "three_ds_eligible": true,
+            "amount_bucket": "large"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 7.972,
+              "acceptance_rate_overall": 0.9790209790209791,
+              "acceptance_rate_overall_sample_size": 143,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 143,
+              "chargeback_rate_overall": 0.007142857142857143,
+              "chargeback_rate_overall_sample_size": 140,
+              "average_latency_ms": 422.87334825647633,
+              "average_latency_ms_sample_size": 143,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 0.8,
+              "acceptance_rate_segment_sample_size": 5
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 6.734,
+              "acceptance_rate_overall": 0.8940397350993378,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0.007407407407407408,
+              "chargeback_rate_overall_sample_size": 135,
+              "average_latency_ms": 289.7638155892974,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 0.8,
+              "acceptance_rate_segment_sample_size": 5
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 5.496,
+              "acceptance_rate_overall": 0.9043478260869565,
+              "acceptance_rate_overall_sample_size": 115,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 115,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 104,
+              "average_latency_ms": 253.50612414986023,
+              "average_latency_ms_sample_size": 115,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 5
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "gamma",
+            "probabilities": {
+              "alpha": 0.36,
+              "beta": 0.01,
+              "gamma": 0.63
+            },
+            "confidence": 0.45
+          }
+        },
+        "usage": {
+          "input_tokens": 1505,
+          "output_tokens": 40,
+          "cost": 0.00006321
+        },
+        "id": "gen-dec-1791795043-E4WjdBRACgWgcaAJOv2Z",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "gamma",
+      "jevProbabilities": {
+        "alpha": 0.36,
+        "beta": 0.01,
+        "gamma": 0.63
+      },
+      "jevConfidence": 0.45,
+      "r1Choice": "alpha",
+      "r2Choice": "alpha",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 466.3343097765976,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 7.971999331171805,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 7.971999331171805
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 232.44399535952516,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.93,
+          "feeEUR": 6.73399943406845,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 6.73399943406845
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 221.97081138330395,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.9500000000000001,
+          "feeEUR": 5.495999536965096,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 5.495999536965096
+        }
+      }
+    },
+    "agreement": {
+      "scenarioId": "eligibility_mix",
+      "transactionIndex": 300,
+      "transaction": {
+        "index": 300,
+        "amount": 12.532045594657367,
+        "amountEUR": 11.654802403031352,
+        "amountBucket": "small",
+        "currency": "USD",
+        "country": "US",
+        "paymentMethod": "card",
+        "cardScheme": "visa",
+        "device": "mobile",
+        "customerType": "returning",
+        "threeDsEligible": false
+      },
+      "eligiblePspIds": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "observed": {
+        "alpha": {
+          "pspId": "alpha",
+          "acceptanceOverall": {
+            "value": 0.9788732394366197,
+            "sampleSize": 142
+          },
+          "acceptanceSegment": {
+            "value": 1,
+            "sampleSize": 3
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 142
+          },
+          "chargebackOverall": {
+            "value": 0.007194244604316547,
+            "sampleSize": 139
+          },
+          "averageLatencyMs": {
+            "value": 423.78345761730105,
+            "sampleSize": 142
+          },
+          "retrySuccessRate": 0.31
+        },
+        "beta": {
+          "pspId": "beta",
+          "acceptanceOverall": {
+            "value": 0.8874172185430463,
+            "sampleSize": 151
+          },
+          "acceptanceSegment": {
+            "value": 0.6666666666666666,
+            "sampleSize": 3
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 151
+          },
+          "chargebackOverall": {
+            "value": 0.007462686567164179,
+            "sampleSize": 134
+          },
+          "averageLatencyMs": {
+            "value": 289.8594620111991,
+            "sampleSize": 151
+          },
+          "retrySuccessRate": 0.38
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "acceptanceOverall": {
+            "value": 0.907563025210084,
+            "sampleSize": 119
+          },
+          "acceptanceSegment": {
+            "value": 0.6666666666666666,
+            "sampleSize": 3
+          },
+          "availabilityOverall": {
+            "value": 1,
+            "sampleSize": 119
+          },
+          "chargebackOverall": {
+            "value": 0,
+            "sampleSize": 108
+          },
+          "averageLatencyMs": {
+            "value": 253.11672455441422,
+            "sampleSize": 119
+          },
+          "retrySuccessRate": 0.42
+        }
+      },
+      "schema": {
+        "decisionId": "psp_selection",
+        "decisionVersion": "1",
+        "name": "Payment provider selection",
+        "type": "choice",
+        "question": "Which payment service provider should handle this transaction's first attempt?",
+        "objective": "Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.",
+        "metrics": [
+          {
+            "id": "acceptance_rate_overall",
+            "description": "Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did."
+          },
+          {
+            "id": "acceptance_rate_segment",
+            "description": "Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts."
+          },
+          {
+            "id": "availability_rate_overall",
+            "description": "Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized."
+          },
+          {
+            "id": "chargeback_rate_overall",
+            "description": "Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback)."
+          },
+          {
+            "id": "average_latency_ms",
+            "description": "This PSP's average response time in milliseconds, estimated from past attempts."
+          },
+          {
+            "id": "retry_success_rate",
+            "description": "Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only."
+          },
+          {
+            "id": "sample_size",
+            "description": "Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many."
+          },
+          {
+            "id": "fixed_fee_eur",
+            "description": "Fixed fee in EUR this PSP charges per authorized payment, regardless of amount."
+          },
+          {
+            "id": "cost_percent",
+            "description": "Variable fee this PSP charges per authorized payment, as a percent of the transaction amount."
+          },
+          {
+            "id": "expected_fee_eur",
+            "description": "The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur."
+          },
+          {
+            "id": "recent_segment_outcomes",
+            "description": "This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level."
+          }
+        ],
+        "options": [
+          {
+            "id": "alpha",
+            "description": "PSP Alpha — Generalist."
+          },
+          {
+            "id": "beta",
+            "description": "PSP Beta — EU specialist."
+          },
+          {
+            "id": "gamma",
+            "description": "PSP Gamma — Cheap and fast."
+          }
+        ]
+      },
+      "request": {
+        "model": "typesafe/jev-1.13",
+        "state": {
+          "transaction": {
+            "amount_eur": 11.65,
+            "currency": "USD",
+            "country": "US",
+            "payment_method": "card",
+            "card_scheme": "visa",
+            "device": "mobile",
+            "customer_type": "returning",
+            "three_ds_eligible": false,
+            "amount_bucket": "small"
+          },
+          "psps": [
+            {
+              "id": "alpha",
+              "fixed_fee_eur": 0.25,
+              "cost_percent": 1.3,
+              "expected_fee_eur": 0.4015,
+              "acceptance_rate_overall": 0.9788732394366197,
+              "acceptance_rate_overall_sample_size": 142,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 142,
+              "chargeback_rate_overall": 0.007194244604316547,
+              "chargeback_rate_overall_sample_size": 139,
+              "average_latency_ms": 423.78345761730105,
+              "average_latency_ms_sample_size": 142,
+              "retry_success_rate": 0.31,
+              "acceptance_rate_segment": 1,
+              "acceptance_rate_segment_sample_size": 3
+            },
+            {
+              "id": "beta",
+              "fixed_fee_eur": 0.2,
+              "cost_percent": 1.1,
+              "expected_fee_eur": 0.3282,
+              "acceptance_rate_overall": 0.8874172185430463,
+              "acceptance_rate_overall_sample_size": 151,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 151,
+              "chargeback_rate_overall": 0.007462686567164179,
+              "chargeback_rate_overall_sample_size": 134,
+              "average_latency_ms": 289.8594620111991,
+              "average_latency_ms_sample_size": 151,
+              "retry_success_rate": 0.38,
+              "acceptance_rate_segment": 0.6666666666666666,
+              "acceptance_rate_segment_sample_size": 3
+            },
+            {
+              "id": "gamma",
+              "fixed_fee_eur": 0.15,
+              "cost_percent": 0.9,
+              "expected_fee_eur": 0.2549,
+              "acceptance_rate_overall": 0.907563025210084,
+              "acceptance_rate_overall_sample_size": 119,
+              "availability_rate_overall": 1,
+              "availability_rate_overall_sample_size": 119,
+              "chargeback_rate_overall": 0,
+              "chargeback_rate_overall_sample_size": 108,
+              "average_latency_ms": 253.11672455441422,
+              "average_latency_ms_sample_size": 119,
+              "retry_success_rate": 0.42,
+              "acceptance_rate_segment": 0.6666666666666666,
+              "acceptance_rate_segment_sample_size": 3
+            }
+          ]
+        },
+        "questions": {
+          "psp_selection": {
+            "type": "choice",
+            "instructions": "Which payment service provider should handle this transaction's first attempt?\n\nObjective: Choose the payment service provider most likely to result in a successful authorization for this specific transaction. If two providers seem comparably likely to authorize it, prefer the one with the lower expected fee.\n\nMetric definitions:\n- acceptance_rate_overall: Share of this PSP's past attempts, across all transaction types, that ended in a successful authorization. 1.0 means all succeeded, 0.0 means none did.\n- acceptance_rate_segment: Same as acceptance_rate_overall, but restricted to past attempts matching this transaction's currency, country, payment method and amount range. More specific, but based on fewer attempts.\n- availability_rate_overall: Share of this PSP's past attempts where it was reachable at all, independent of whether the payment was then authorized.\n- chargeback_rate_overall: Share of this PSP's past authorized payments that were later reversed by the cardholder's bank (a chargeback).\n- average_latency_ms: This PSP's average response time in milliseconds, estimated from past attempts.\n- retry_success_rate: Share of this PSP's declined first attempts that succeeded on a later retry. Not used to decide this first attempt; shown for context only.\n- sample_size: Number of past attempts behind a rate value. A rate based on very few attempts is less reliable than one based on many.\n- fixed_fee_eur: Fixed fee in EUR this PSP charges per authorized payment, regardless of amount.\n- cost_percent: Variable fee this PSP charges per authorized payment, as a percent of the transaction amount.\n- expected_fee_eur: The fee in EUR this PSP would charge for this specific transaction if the payment is authorized: amount * cost_percent + fixed_fee_eur.\n- recent_segment_outcomes: This PSP's most recent past attempts matching this transaction's segment, most recent first, each \"authorized\" or \"declined\". Only present at the highest data-richness level.",
+            "criteria": {
+              "alpha": "PSP Alpha — Generalist.",
+              "beta": "PSP Beta — EU specialist.",
+              "gamma": "PSP Gamma — Cheap and fast."
+            }
+          }
+        }
+      },
+      "rawResponse": {
+        "model": "typesafe/jev-1.13-20260917",
+        "answers": {
+          "psp_selection": {
+            "type": "choice",
+            "choice": "alpha",
+            "probabilities": {
+              "alpha": 0.89,
+              "beta": 0.01,
+              "gamma": 0.1
+            },
+            "confidence": 0.83
+          }
+        },
+        "usage": {
+          "input_tokens": 1539,
+          "output_tokens": 40,
+          "cost": 0.000064638
+        },
+        "id": "gen-dec-1791795043-3s7x7BkSeL9XUu1aAnAF",
+        "provider": "TypeSafe"
+      },
+      "jevChoice": "alpha",
+      "jevProbabilities": {
+        "alpha": 0.89,
+        "beta": 0.01,
+        "gamma": 0.1
+      },
+      "jevConfidence": 0.83,
+      "r1Choice": "alpha",
+      "r2Choice": "alpha",
+      "outcomesByPsp": {
+        "alpha": {
+          "pspId": "alpha",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 481.424366268382,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.945,
+          "feeEUR": 0.4015124312394076,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.4015124312394076
+        },
+        "beta": {
+          "pspId": "beta",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 315.4996544297316,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.88,
+          "feeEUR": 0.32820282643334486,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.32820282643334486
+        },
+        "gamma": {
+          "pspId": "gamma",
+          "available": true,
+          "authorized": true,
+          "latencyMs": 208.8538789325151,
+          "chargeback": false,
+          "worldAcceptanceRate": 0.9,
+          "feeEUR": 0.2548932216272822,
+          "chargebackLossEUR": 0,
+          "netCostEUR": 0.2548932216272822
+        }
+      }
+    }
+  }
+}
