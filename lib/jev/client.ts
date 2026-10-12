@@ -7,7 +7,9 @@ export const DECISIONS_API_URL = "https://openrouter.ai/api/alpha/decisions";
 export class JevClientError extends Error {
   constructor(
     message: string,
-    public readonly cause?: unknown
+    public readonly cause?: unknown,
+    /** HTTP status, when the failure came from a non-2xx response. Undefined for network/timeout errors or shape-validation failures. */
+    public readonly status?: number
   ) {
     super(message);
   }
@@ -48,7 +50,7 @@ export async function callJevDecisions(request: DecisionsApiRequest, options: Je
   }
 
   if (!res.ok) {
-    throw new JevClientError(`Jev request failed with status ${res.status}.`, await safeText(res));
+    throw new JevClientError(`Jev request failed with status ${res.status}.`, await safeText(res), res.status);
   }
 
   const json: unknown = await res.json();
