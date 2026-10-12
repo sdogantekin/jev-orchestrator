@@ -5,3 +5,4 @@ dist
 *.log
 /requirements.md
 /requirements-v2.md
+/experiments/fixtures/
