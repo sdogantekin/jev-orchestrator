@@ -98,7 +98,23 @@ contract or dashboard, the same framing section 6.1 uses to justify what R1 is a
 ("general PSP strengths, not the hidden effect sizes"). The `decisionId` sent to the API is
 `psp_selection` — not specified exactly in the requirements doc, chosen for readability.
 
-## 11. Scenario overrides are single-axis
+## 11. State-hash caching barely collapses anything, because state includes exact amounts
+
+Section 9.7 expects meaningful savings from caching by state hash ("many transactions collapse
+to the same segment and amount bucket"). The C4 pilot (700 live calls, stable scenario, one
+seed) saw a **0% within-run cache hit rate** — every call was a miss. The state built in
+state.ts includes the transaction's exact `amount_eur` and each PSP's exact `expected_fee_eur`
+(both continuous, not bucketed), so two transactions in the same segment essentially never hash
+to the same state unless their amounts coincide to the cent. This is a direct consequence of
+giving Jev the real amount rather than just its bucket — better for decision quality (a $26 and
+a $495 transaction are both "medium" but very different fee situations), but it means the
+"caching makes repeat batches nearly free" assumption doesn't hold as stated. Doesn't change
+the cost conclusion (the full batch is already cheap in absolute terms, ~$11), but it does mean
+every full run of the batch will cost close to that full amount again, not a fraction of it — so
+treat "run the full batch once" (section 9.7) as a real constraint on how often to rerun it, not
+just a nice-to-have.
+
+## 12. Scenario overrides are single-axis
 
 Each of the six scenarios (5.6) changes one mechanism (drift, a background-history cap, a
 world/stream override). `resolveScenario` supports combining them, but no scenario config
