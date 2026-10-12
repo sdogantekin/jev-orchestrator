@@ -1,0 +1,96 @@
+{
+  "curve": [
+    {
+      "bucketRange": [
+        0,
+        0.1
+      ],
+      "meanStatedProbability": 0.031742332862824685,
+      "empiricalBestRate": 0.34447581162581803,
+      "sampleSize": 77930
+    },
+    {
+      "bucketRange": [
+        0.1,
+        0.2
+      ],
+      "meanStatedProbability": 0.14140102685331907,
+      "empiricalBestRate": 0.5351826543050271,
+      "sampleSize": 27073
+    },
+    {
+      "bucketRange": [
+        0.2,
+        0.3
+      ],
+      "meanStatedProbability": 0.2414927017350479,
+      "empiricalBestRate": 0.5297163315890939,
+      "sampleSize": 18155
+    },
+    {
+      "bucketRange": [
+        0.3,
+        0.4
+      ],
+      "meanStatedProbability": 0.34311876208898634,
+      "empiricalBestRate": 0.49160541586073503,
+      "sampleSize": 12925
+    },
+    {
+      "bucketRange": [
+        0.4,
+        0.5
+      ],
+      "meanStatedProbability": 0.44511488600801297,
+      "empiricalBestRate": 0.4179704962002682,
+      "sampleSize": 11185
+    },
+    {
+      "bucketRange": [
+        0.5,
+        0.6
+      ],
+      "meanStatedProbability": 0.5452549091915254,
+      "empiricalBestRate": 0.28524015856918966,
+      "sampleSize": 10847
+    },
+    {
+      "bucketRange": [
+        0.6,
+        0.7
+      ],
+      "meanStatedProbability": 0.6469971172325361,
+      "empiricalBestRate": 0.18633888532991671,
+      "sampleSize": 12488
+    },
+    {
+      "bucketRange": [
+        0.7,
+        0.8
+      ],
+      "meanStatedProbability": 0.7473239008987382,
+      "empiricalBestRate": 0.16541170755404422,
+      "sampleSize": 16468
+    },
+    {
+      "bucketRange": [
+        0.8,
+        0.9
+      ],
+      "meanStatedProbability": 0.84589045518128,
+      "empiricalBestRate": 0.24217152695577315,
+      "sampleSize": 18586
+    },
+    {
+      "bucketRange": [
+        0.9,
+        1
+      ],
+      "meanStatedProbability": 0.9474022261682434,
+      "empiricalBestRate": 0.40599419637056605,
+      "sampleSize": 23089
+    }
+  ],
+  "samplesUsed": 228746,
+  "decisionsSkippedNotOk": 0
+}
