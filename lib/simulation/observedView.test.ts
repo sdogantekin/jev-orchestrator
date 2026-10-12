@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { checkEligibility } from "../domain/eligibility.js";
 import { segmentKeyEquals, segmentKeyOf } from "../domain/types.js";
 import { loadCurrencyConversion, loadScenarioConfig, loadStreamConfig, loadWorldConfig } from "./configLoader.js";
-import { computeObservedView, type ObservedViewConfig } from "./observedView.js";
+import { computeObservedView, computeRecentSegmentOutcomes, type ObservedViewConfig } from "./observedView.js";
 import { resolveScenario } from "./scenarios.js";
 import { generateStream } from "./stream.js";
 
@@ -110,5 +110,51 @@ describe("computeObservedView: cold start scenario caps a PSP's whole lifetime h
     const gamma = resolved.world.psps.find((p) => p.id === "gamma")!;
     const baseGamma = baseWorld.psps.find((p) => p.id === "gamma")!;
     expect(gamma.baseAcceptanceRate).toBe(baseGamma.baseAcceptanceRate);
+  });
+});
+
+describe("computeRecentSegmentOutcomes", () => {
+  const cfg: ObservedViewConfig = { ...baseObservedView, backgroundHistoryLimits: [] };
+  const seed = "recent-outcomes-check";
+  const stream = generateStream(seed, 1000, baseStream, rates);
+  const alpha = baseWorld.psps.find((p) => p.id === "alpha")!;
+
+  it("returns at most `limit` outcomes, most recent first", () => {
+    const t = 500;
+    const tx = stream[t]!;
+    const outcomes = computeRecentSegmentOutcomes(stream, t, tx, alpha, baseWorld, seed, cfg, 20);
+    expect(outcomes.length).toBeLessThanOrEqual(20);
+    expect(outcomes.every((o) => typeof o === "boolean")).toBe(true);
+  });
+
+  it("is empty before the lag has elapsed", () => {
+    const tx = stream[10]!;
+    const outcomes = computeRecentSegmentOutcomes(stream, 10, tx, alpha, baseWorld, seed, cfg, 20);
+    expect(outcomes).toEqual([]);
+  });
+
+  it("returns a count matching the segment-matching eligible attempts in the window, capped at `limit`", () => {
+    const t = 600;
+    const tx = stream[t]!;
+    const lo = Math.max(0, t - cfg.lag - cfg.window);
+    const hi = t - cfg.lag;
+    const expectedCount = stream
+      .slice(lo, hi + 1)
+      .filter((historicalTx) => checkEligibility(alpha, historicalTx).eligible && segmentKeyEquals(segmentKeyOf(historicalTx), segmentKeyOf(tx)))
+      .length;
+
+    const outcomes = computeRecentSegmentOutcomes(stream, t, tx, alpha, baseWorld, seed, cfg, 20);
+    expect(outcomes.length).toBe(Math.min(20, expectedCount));
+  });
+
+  it("respects a scenario's background-history cap the same way the aggregated stats do", () => {
+    const limitedCfg: ObservedViewConfig = {
+      ...baseObservedView,
+      backgroundHistoryLimits: [{ pspId: "alpha", maxAttempts: 5 }],
+    };
+    const t = 900;
+    const tx = stream[t]!;
+    const outcomes = computeRecentSegmentOutcomes(stream, t, tx, alpha, baseWorld, seed, limitedCfg, 20);
+    expect(outcomes.length).toBeLessThanOrEqual(5);
   });
 });

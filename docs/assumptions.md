@@ -77,7 +77,28 @@ combination by its combined result across all 5 training slices, not by any one 
 fixed it: R2 no longer loses to R0/R1 on any scenario. This is a deviation from the literal
 "a stream" wording, made explicitly with the owner's sign-off rather than silently.
 
-## 9. Scenario overrides are single-axis
+## 9. Jev's data richness level 2 adds segment-scoped acceptance only
+
+Section 8.6 says level 2 is "level 1 plus observed stats for the transaction's segment with
+sample sizes," which could mean every metric gets a segment-scoped variant. The simulator
+(step 1) only ever computed a segment-scoped value for acceptance (`acceptanceSegment`) —
+availability, chargeback and latency were only ever "overall" — since acceptance is what the
+hidden segment modifiers and drift actually act on, and segment-level availability/chargeback/
+latency didn't seem to add anything the experiment needs. Level 2 therefore adds
+`acceptance_rate_segment` (+ sample size) only; the other metrics stay overall-only at every
+level. Would need a step-1 simulator change (not just a Jev adapter change) to add true
+segment-scoped variants of the others, if that turns out to matter.
+
+## 10. Decision Schema option descriptions use the PSP's business role
+
+Each option Jev sees is described as `"<name> — <role>."` (e.g. "PSP Beta — EU specialist."),
+using the same `role` string from the PSP config table (section 5.2). This is deliberately not
+a hidden world value — it's the kind of general positioning a payments team would know from a
+contract or dashboard, the same framing section 6.1 uses to justify what R1 is allowed to know
+("general PSP strengths, not the hidden effect sizes"). The `decisionId` sent to the API is
+`psp_selection` — not specified exactly in the requirements doc, chosen for readability.
+
+## 11. Scenario overrides are single-axis
 
 Each of the six scenarios (5.6) changes one mechanism (drift, a background-history cap, a
 world/stream override). `resolveScenario` supports combining them, but no scenario config

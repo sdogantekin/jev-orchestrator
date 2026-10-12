@@ -128,6 +128,30 @@ function aggregate(attempts: ReturnType<typeof simulatePspOutcome>[]): {
   };
 }
 
+/**
+ * Data richness level 3 (section 8.6): the outcomes of a PSP's most recent eligible attempts
+ * in the same segment as `currentTx`, most recent first, capped at `limit`. Reuses the same
+ * background-attempt gathering as the aggregated stats, so it inherits the same
+ * scenario-specific thin/cold-start caps automatically.
+ */
+export function computeRecentSegmentOutcomes(
+  stream: Transaction[],
+  transactionIndex: number,
+  currentTx: Transaction,
+  psp: PspConfig,
+  world: WorldConfig,
+  seed: string,
+  cfg: ObservedViewConfig,
+  limit = 20
+): boolean[] {
+  const segmentKey = segmentKeyOf(currentTx);
+  const attempts = gatherBackgroundAttempts(stream, seed, transactionIndex, psp, world, cfg, segmentKey);
+  return attempts
+    .slice(Math.max(0, attempts.length - limit))
+    .reverse()
+    .map((a) => a.authorized);
+}
+
 export function computeObservedView(
   stream: Transaction[],
   transactionIndex: number,
