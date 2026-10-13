@@ -140,6 +140,36 @@ describe("R1 rule list", () => {
   });
 });
 
+describe("ties break by observed chargeback rate, lower is better", () => {
+  it("rule 4: an exact acceptance tie prefers the lower observed chargeback rate", () => {
+    const observed: Partial<Record<PspId, ObservedPspStats>> = {
+      alpha: stats({ pspId: "alpha", acceptanceOverall: { value: 0.9, sampleSize: 100 }, chargebackOverall: { value: 0.003, sampleSize: 90 } }),
+      beta: stats({ pspId: "beta", acceptanceOverall: { value: 0.9, sampleSize: 100 }, chargebackOverall: { value: 0.001, sampleSize: 90 } }),
+      gamma: stats({ pspId: "gamma", acceptanceOverall: { value: 0.7, sampleSize: 100 } }),
+    };
+    expect(run({ tx: tx({ currency: "GBP", country: "UK", amount: 600 }), observed })).toBe("beta");
+  });
+
+  it("rule 5: an exact fee tie prefers the lower observed chargeback rate", () => {
+    const eligible = [psp("alpha", { fixedFee: 0.2 }), psp("beta", { fixedFee: 0.2 }), psp("gamma", { fixedFee: 0.3 })];
+    const observed: Partial<Record<PspId, ObservedPspStats>> = {
+      alpha: stats({ pspId: "alpha", chargebackOverall: { value: 0.004, sampleSize: 90 } }),
+      beta: stats({ pspId: "beta", chargebackOverall: { value: 0.001, sampleSize: 90 } }),
+      gamma: stats({ pspId: "gamma" }),
+    };
+    expect(run({ tx: tx({ currency: "GBP", country: "UK", amount: 10 }), eligible, observed })).toBe("beta");
+  });
+
+  it("falls back to canonical PSP order when chargeback rate is also tied", () => {
+    const observed: Partial<Record<PspId, ObservedPspStats>> = {
+      alpha: stats({ pspId: "alpha", acceptanceOverall: { value: 0.9, sampleSize: 100 } }),
+      beta: stats({ pspId: "beta", acceptanceOverall: { value: 0.9, sampleSize: 100 } }),
+      gamma: stats({ pspId: "gamma", acceptanceOverall: { value: 0.7, sampleSize: 100 } }),
+    };
+    expect(run({ tx: tx({ currency: "GBP", country: "UK", amount: 600 }), observed })).toBe("alpha");
+  });
+});
+
 describe("R2 reuses the same structure with different parameters", () => {
   const tunedParams: RuleParams = {
     ...DEFAULT_RULE_PARAMS,

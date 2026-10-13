@@ -11,5 +11,6 @@ export function describeRuleParams(params: RuleParams): string[] {
     `Anything else → prefer ${params.preferredDefault}.`,
     `If the preferred PSP from the rules above isn't eligible for this transaction → fall back to the highest-acceptance eligible PSP instead.`,
     `Safety check: if the preferred PSP's observed availability is below ${pct(params.safetyAvailabilityThreshold)} or its observed acceptance is below ${pct(params.safetyAcceptanceThreshold)} → fall back to the highest-acceptance eligible PSP instead.`,
+    `Whenever two or more eligible PSPs are exactly tied on acceptance or on fee (in any of the rules above that compare them) → prefer whichever has the lower observed chargeback rate, before falling back to a fixed PSP order.`,
   ];
 }

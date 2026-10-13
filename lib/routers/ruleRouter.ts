@@ -37,13 +37,18 @@ function observedAcceptance(stats: ObservedPspStats | undefined): number {
   return stats?.acceptanceOverall.value ?? -Infinity;
 }
 
-/** Highest observed overall acceptance among the eligible set; ties break by canonical PSP order. */
-function highestAcceptanceEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): PspId {
-  let best = eligible[0]!;
-  let bestScore = observedAcceptance(observed[best.id]);
-  for (const psp of eligible.slice(1)) {
-    const score = observedAcceptance(observed[psp.id]);
-    if (score > bestScore) {
+function observedChargeback(stats: ObservedPspStats | undefined): number {
+  // No data yet counts as the worst possible candidate for this tiebreak, never a reason to prefer a PSP.
+  return stats?.chargebackOverall.value ?? Infinity;
+}
+
+/** Among candidates tied on the primary criterion, prefers the lower observed chargeback rate; a further tie keeps canonical PSP order. */
+function breakTieByChargeback(tied: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): PspId {
+  let best = tied[0]!;
+  let bestScore = observedChargeback(observed[best.id]);
+  for (const psp of tied.slice(1)) {
+    const score = observedChargeback(observed[psp.id]);
+    if (score < bestScore) {
       best = psp;
       bestScore = score;
     }
@@ -51,13 +56,25 @@ function highestAcceptanceEligible(eligible: PspConfig[], observed: Partial<Reco
   return best.id;
 }
 
-/** Lowest fixed fee among the eligible set; ties break by canonical PSP order. */
-function lowestFixedFeeEligible(eligible: PspConfig[]): PspId {
-  let best = eligible[0]!;
-  for (const psp of eligible.slice(1)) {
-    if (psp.fixedFee < best.fixedFee) best = psp;
+/** Highest observed overall acceptance among the eligible set; an exact tie breaks by observed chargeback rate, lower is better. */
+function highestAcceptanceEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): PspId {
+  let bestScore = -Infinity;
+  for (const psp of eligible) {
+    const score = observedAcceptance(observed[psp.id]);
+    if (score > bestScore) bestScore = score;
   }
-  return best.id;
+  const tied = eligible.filter((psp) => observedAcceptance(observed[psp.id]) === bestScore);
+  return tied.length === 1 ? tied[0]!.id : breakTieByChargeback(tied, observed);
+}
+
+/** Lowest fixed fee among the eligible set; an exact tie breaks by observed chargeback rate, lower is better. */
+function lowestFixedFeeEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): PspId {
+  let bestFee = Infinity;
+  for (const psp of eligible) {
+    if (psp.fixedFee < bestFee) bestFee = psp.fixedFee;
+  }
+  const tied = eligible.filter((psp) => psp.fixedFee === bestFee);
+  return tied.length === 1 ? tied[0]!.id : breakTieByChargeback(tied, observed);
 }
 
 /** Rules 2 through 6 (section 6.1): first match wins, yields a candidate PSP id that may or may not be eligible. */
@@ -74,7 +91,7 @@ function candidateFromOrderedRules(input: RouterInput, params: RuleParams): PspI
     return highestAcceptanceEligible(eligible, observed); // rule 4
   }
   if (tx.amount < params.smallThreshold) {
-    return lowestFixedFeeEligible(eligible); // rule 5
+    return lowestFixedFeeEligible(eligible, observed); // rule 5
   }
   return params.preferredDefault; // rule 6
 }

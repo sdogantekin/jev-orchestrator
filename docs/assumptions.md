@@ -119,3 +119,22 @@ just a nice-to-have.
 Each of the six scenarios (5.6) changes one mechanism (drift, a background-history cap, a
 world/stream override). `resolveScenario` supports combining them, but no scenario config
 currently does, matching the literal scenario table.
+
+## 13. R1/R2's exact-tie fallback now prefers lower observed chargeback rate, not array order
+
+`highestAcceptanceEligible` and `lowestFixedFeeEligible` (`ruleRouter.ts`) previously broke an
+exact tie on their primary criterion by keeping whichever PSP happened to come first in the
+`eligible` array — not a deliberate choice, just an artifact of the original `for` loop using
+strict `>`/`<` comparisons. Changed to break such ties by the PSPs' observed chargeback rate
+(lower preferred), falling back to canonical PSP order only if that's tied too. Chargeback rate
+was already fully absent from both rule routers' decision logic (see the Playground's DESIGN.md
+field-impact appendix); this doesn't add it as a primary criterion, it only uses it to resolve
+the specific case where the primary criteria give no information at all.
+
+**Verified as a no-op against every already-published number**: re-ran R0/R1/R2's full tuning +
+evaluation for all 6 scenarios against this change and diffed against the committed
+`experiments/results/*.json` — R1 and R2's authorization rates and R2's tuned parameters are
+byte-identical in every scenario. Exact floating-point ties on continuous, noisy acceptance/fee
+values essentially never occur in the real scenario streams, so this was dormant in every
+decision that produced the committed results. It's reachable in the Playground's custom mode,
+where a visitor can easily type identical numbers for two PSPs by hand.
