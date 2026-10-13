@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { PspInput, TransactionInput } from "../lib/playground/schema";
 import type { CustomDecisionResult } from "../lib/playground/customDecision";
+import { ROUTER_DESCRIPTIONS, SCENARIO_DESCRIPTIONS } from "../lib/content/glossary";
 
 const SCENARIO_IDS = ["stable", "drift", "thin_data", "cold_start", "conflicting_objectives", "eligibility_mix"] as const;
 type ScenarioId = (typeof SCENARIO_IDS)[number];
@@ -112,24 +113,63 @@ function CopyableJson({ data }: { data: unknown }) {
   );
 }
 
-function Stepper({ activeStep }: { activeStep: number }) {
+type StepperStage = "idle" | "calling_jev" | "done";
+
+/** A flow diagram of the decision pipeline with the current step highlighted — "calling_jev" is the one stage with real, perceptible latency (the live OpenRouter call); everything else is effectively instant. */
+function Stepper({ activeStep, live }: { activeStep: StepperStage; live: boolean }) {
+  const activeIndex = activeStep === "idle" ? 0 : activeStep === "calling_jev" ? 2 : STEPS.length - 1;
   return (
-    <div className="mb-6 flex flex-wrap gap-2">
-      {STEPS.map((step, i) => (
-        <div key={step} className={`rounded-full px-3 py-1 text-xs font-medium ${i <= activeStep ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-800 text-slate-500"}`}>
-          {i + 1}. {step}
-        </div>
-      ))}
+    <div className="mb-6">
+      <div className="flex flex-wrap gap-2">
+        {STEPS.map((step, i) => {
+          const state = i < activeIndex ? "done" : i === activeIndex ? "current" : "upcoming";
+          return (
+            <div
+              key={step}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                state === "current" ? "bg-indigo-500 text-white" : state === "done" ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-800 text-slate-500"
+              }`}
+            >
+              {state === "current" && activeStep === "calling_jev" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />}
+              {i + 1}. {step}
+            </div>
+          );
+        })}
+      </div>
+      {!live && activeStep === "done" && <p className="mt-1.5 text-xs text-slate-500">Replayed from a recorded decision — no live call made just now.</p>}
     </div>
   );
 }
 
-function ChoiceCard({ label, pspId, highlight }: { label: string; pspId: string; highlight?: boolean }) {
+function ChoiceCard({ label, pspId, highlight, description }: { label: string; pspId: string; highlight?: boolean; description?: string }) {
   return (
-    <div className={`rounded-lg border p-3 ${highlight ? "border-amber-500 bg-amber-500/10" : "border-slate-800 bg-slate-900/60"}`}>
-      <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
+    <div className={`rounded-lg border p-3 ${highlight ? "border-amber-500 bg-amber-500/10" : "border-slate-800 bg-slate-900/60"}`} title={description}>
+      <div className="flex items-center gap-1 text-xs uppercase tracking-wide text-slate-400">
+        {label}
+        {description && <span className="cursor-help text-slate-500">ⓘ</span>}
+      </div>
       <div className="mt-1 text-xl font-semibold text-slate-100">{pspId}</div>
     </div>
+  );
+}
+
+/** Always-visible, not hover-only — identity/meaning shouldn't depend on discovering a tooltip. */
+function RouterLegend() {
+  return (
+    <dl className="mb-4 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
+      <div>
+        <dt className="font-medium text-slate-300">R1</dt>
+        <dd>{ROUTER_DESCRIPTIONS.R1}</dd>
+      </div>
+      <div>
+        <dt className="font-medium text-slate-300">R2</dt>
+        <dd>{ROUTER_DESCRIPTIONS.R2}</dd>
+      </div>
+      <div>
+        <dt className="font-medium text-slate-300">Jev</dt>
+        <dd>{ROUTER_DESCRIPTIONS.Jev}</dd>
+      </div>
+    </dl>
   );
 }
 
@@ -212,6 +252,7 @@ export default function PlaygroundClient({ presets }: { presets: PresetExamples 
             <option value="disagreement">Example where Jev and R2 disagree</option>
             <option value="agreement">Example where Jev and R2 agree</option>
           </select>
+          <p className="w-full text-sm text-slate-400">{SCENARIO_DESCRIPTIONS[scenarioId]}</p>
         </div>
       ) : (
         <CustomForm transaction={transaction} setTransaction={setTransaction} psps={psps} setPsps={setPsps} onSubmit={handleSubmit} loading={loading} />
@@ -220,6 +261,7 @@ export default function PlaygroundClient({ presets }: { presets: PresetExamples 
       {error && <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
 
       {mode === "preset" && <PresetView example={preset} />}
+      {mode === "custom" && loading && <Stepper activeStep="calling_jev" live />}
       {mode === "custom" && result && <CustomResultView result={result} />}
     </div>
   );
@@ -229,11 +271,12 @@ function PresetView({ example }: { example: PresetExample }) {
   const disagreement = example.jevChoice !== example.r2Choice;
   return (
     <div>
-      <Stepper activeStep={4} />
+      <Stepper activeStep="done" live={false} />
+      <RouterLegend />
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ChoiceCard label="R1" pspId={example.r1Choice} />
-        <ChoiceCard label="R2" pspId={example.r2Choice} highlight={disagreement} />
-        <ChoiceCard label="Jev" pspId={example.jevChoice} highlight={disagreement} />
+        <ChoiceCard label="R1" pspId={example.r1Choice} description={ROUTER_DESCRIPTIONS.R1} />
+        <ChoiceCard label="R2" pspId={example.r2Choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.R2} />
+        <ChoiceCard label="Jev" pspId={example.jevChoice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.Jev} />
         <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
           <div className="text-xs uppercase tracking-wide text-slate-400">Jev confidence</div>
           <div className="mt-1 text-xl font-semibold text-slate-100">{example.jevConfidence?.toFixed(2) ?? "n/a"}</div>
@@ -281,7 +324,7 @@ function CustomResultView({ result }: { result: CustomDecisionResult }) {
   if (result.status === "single_eligible") {
     return (
       <div>
-        <Stepper activeStep={4} />
+        <Stepper activeStep="done" live />
         <p className="mb-3 text-slate-300">Only one PSP is eligible — routed deterministically, Jev skipped.</p>
         <ChoiceCard label="Route" pspId={result.chosenPspId} />
         <div className="mt-4 rounded-lg border border-slate-800 p-3 text-sm">
@@ -297,12 +340,13 @@ function CustomResultView({ result }: { result: CustomDecisionResult }) {
 
   return (
     <div>
-      <Stepper activeStep={4} />
+      <Stepper activeStep="done" live />
+      <RouterLegend />
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ChoiceCard label="R1" pspId={result.r1Choice} />
-        <ChoiceCard label="R2" pspId={result.r2Choice} highlight={disagreement} />
+        <ChoiceCard label="R1" pspId={result.r1Choice} description={ROUTER_DESCRIPTIONS.R1} />
+        <ChoiceCard label="R2" pspId={result.r2Choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.R2} />
         {jev.status === "ok" ? (
-          <ChoiceCard label="Jev" pspId={jev.choice} highlight={disagreement} />
+          <ChoiceCard label="Jev" pspId={jev.choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.Jev} />
         ) : (
           <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3">
             <div className="text-xs uppercase tracking-wide text-red-300">Jev</div>

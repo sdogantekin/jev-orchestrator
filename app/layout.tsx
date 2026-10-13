@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+      <body className="min-h-screen text-slate-100 antialiased">
         <div className="sticky top-0 z-50 border-b border-amber-500/30 bg-amber-950/90 px-4 py-2 text-center text-sm text-amber-200 backdrop-blur">
           <strong className="font-semibold">Simulation only.</strong> No real payments are processed, authorized, or routed anywhere on this site. All PSPs and transactions are synthetic.
         </div>

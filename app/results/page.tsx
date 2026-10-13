@@ -3,6 +3,7 @@ import { hypotheses, loadAllResults } from "../../lib/results/loadResults";
 import { SCENARIO_IDS } from "../../lib/simulation/scenarios";
 import { DEFAULT_JEV_MODEL } from "../../lib/jev/config";
 import { EVAL_SEED_COUNT, SENSITIVITY_SEED_COUNT } from "../../lib/experiments/seeds";
+import { ROUTER_DESCRIPTIONS, SCENARIO_DESCRIPTIONS } from "../../lib/content/glossary";
 
 export const metadata = { title: "Results — Payment Decision Lab" };
 
@@ -100,6 +101,33 @@ export default function ResultsPage() {
         sensitivity check, model <code className="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300">{DEFAULT_JEV_MODEL}</code>, pinned. Hover a badge for
         the hypothesis it tests. Numbers are seeded and reproducible from the configs in <code className="rounded bg-slate-800 px-1.5 py-0.5">experiments/config/</code>.
       </p>
+
+      <div className="mb-8 grid gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5 sm:grid-cols-2">
+        <div>
+          <h2 className="mb-2 text-sm font-semibold text-slate-200">Routers</h2>
+          <dl className="space-y-2 text-sm">
+            {(["R0", "R1", "R2", "Jev"] as const).map((key) => (
+              <div key={key}>
+                <dt className="font-medium" style={{ color: COLORS[key] }}>
+                  {key === "Jev" ? "R3 Jev" : key}
+                </dt>
+                <dd className="text-slate-400">{ROUTER_DESCRIPTIONS[key]}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <div>
+          <h2 className="mb-2 text-sm font-semibold text-slate-200">Scenarios</h2>
+          <dl className="space-y-2 text-sm">
+            {SCENARIO_IDS.map((id) => (
+              <div key={id}>
+                <dt className="font-medium text-slate-200">{SCENARIO_LABELS[id]}</dt>
+                <dd className="text-slate-400">{SCENARIO_DESCRIPTIONS[id]}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
 
       <ChartSection title="Authorization rate by scenario and router" hypotheses={hypotheses("H2", "H3")}>
         <p className="mb-3 text-sm text-slate-400">
