@@ -7,7 +7,7 @@ import { callJevDecisions } from "./client.js";
 import { loadFixture, saveFixture } from "./fixtures.js";
 import { buildDecisionsRequest, type DecisionsApiRequest } from "./request.js";
 import type { DecisionsApiResponse, Usage } from "./response.js";
-import { buildDecisionSchema } from "./schema.js";
+import { buildDecisionSchema, type DecisionSchema } from "./schema.js";
 import { buildJevState, type DataRichnessLevel } from "./state.js";
 
 export type JevDecisionSource = "cache" | "fixture" | "live";
@@ -19,6 +19,7 @@ export interface JevDecisionOk {
   probabilities: Record<string, number>;
   confidence?: number;
   usage?: Usage;
+  schema: DecisionSchema;
   request: DecisionsApiRequest;
   rawResponse: DecisionsApiResponse;
 }
@@ -27,6 +28,7 @@ export interface JevDecisionOk {
 export interface JevDecisionInvalid {
   status: "invalid";
   reason: string;
+  schema: DecisionSchema;
   request: DecisionsApiRequest;
 }
 
@@ -34,6 +36,7 @@ export interface JevDecisionInvalid {
 export interface JevDecisionFailed {
   status: "failed";
   reason: string;
+  schema: DecisionSchema;
   request: DecisionsApiRequest;
 }
 
@@ -93,30 +96,31 @@ export async function decideWithJev(args: DecideWithJevArgs): Promise<JevDecisio
       args.cache.set(hash, { response });
     } else if (args.allowLive) {
       if (!args.apiKey) {
-        return { status: "failed", reason: "Live call requested but no API key was provided.", request };
+        return { status: "failed", reason: "Live call requested but no API key was provided.", schema, request };
       }
       const callClient = args.callClient ?? callJevDecisions;
       try {
         response = await callClient(request, { apiKey: args.apiKey, timeoutMs: args.timeoutMs });
       } catch (err) {
-        return { status: "failed", reason: err instanceof Error ? err.message : "Jev could not be reached.", request };
+        return { status: "failed", reason: err instanceof Error ? err.message : "Jev could not be reached.", schema, request };
       }
       source = "live";
       args.cache.set(hash, { response });
       if (useFixtures) saveFixture(hash, response, args.fixturesDir);
     } else {
-      return { status: "failed", reason: "No cached or recorded response for this state, and live calls are disabled.", request };
+      return { status: "failed", reason: "No cached or recorded response for this state, and live calls are disabled.", schema, request };
     }
   }
 
   const answer = response.answers[schema.decisionId];
   if (!answer) {
-    return { status: "failed", reason: `Jev's response did not include an answer for "${schema.decisionId}".`, request };
+    return { status: "failed", reason: `Jev's response did not include an answer for "${schema.decisionId}".`, schema, request };
   }
   if (!args.eligible.some((p) => p.id === answer.choice)) {
     return {
       status: "invalid",
       reason: "Jev returned a decision outside the eligible PSP set. The route was rejected by validation.",
+      schema,
       request,
     };
   }
@@ -128,6 +132,7 @@ export async function decideWithJev(args: DecideWithJevArgs): Promise<JevDecisio
     probabilities: answer.probabilities,
     confidence: answer.confidence,
     usage: response.usage,
+    schema,
     request,
     rawResponse: response,
   };

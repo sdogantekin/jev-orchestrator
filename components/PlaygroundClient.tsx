@@ -393,7 +393,7 @@ function CustomResultView({ result }: { result: CustomDecisionResult }) {
         </div>
       </div>
 
-      {jev.status === "ok" && <RawDataSection schema={null} request={jev.request} rawResponse={jev.rawResponse} />}
+      {jev.status === "ok" && <RawDataSection schema={jev.schema} request={jev.request} rawResponse={jev.rawResponse} />}
     </div>
   );
 }

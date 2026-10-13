@@ -130,6 +130,7 @@ describe("decideWithJev", () => {
     if (result.status === "ok") {
       expect(result.source).toBe("cache");
       expect(result.choice).toBe("beta");
+      expect(result.schema.decisionId).toBe("psp_selection");
     }
   });
 
