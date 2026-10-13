@@ -552,6 +552,12 @@ in time. See Section 10 for the full list of what this study does and doesn't te
   different instruction phrasing, a stronger emphasis on cost in the objective text, or a
   different schema shape would change Jev's acceptance-over-cost behavior. That's a reasonable
   next experiment, not something this one rules out.
+- Chargeback rate (a rough, static proxy for fraud risk in this simulator — see
+  `docs/assumptions.md` #13) is never a selection criterion for any router. It's shown to Jev as
+  context but never named in its objective text, and R1/R2 only ever consult it to break an exact
+  tie on acceptance or fee — a case that turned out to be dormant in every scenario reported here.
+  Real production routing sometimes also manages chargeback-ratio exposure at a portfolio level
+  (e.g. card-network monitoring thresholds); this experiment doesn't test that dimension at all.
 
 ---
 
