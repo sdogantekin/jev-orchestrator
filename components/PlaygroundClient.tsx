@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import type { PspInput, TransactionInput } from "../lib/playground/schema";
 import type { CustomDecisionResult } from "../lib/playground/customDecision";
 import { ROUTER_DESCRIPTIONS, SCENARIO_DESCRIPTIONS } from "../lib/content/glossary";
+import { describeRuleParams } from "../lib/routers/describeRules";
+import type { RuleParams } from "../lib/routers/ruleRouter";
+import { CURRENCIES, PAYMENT_METHODS } from "../lib/domain/types";
 
 const SCENARIO_IDS = ["stable", "drift", "thin_data", "cold_start", "conflicting_objectives", "eligibility_mix"] as const;
 type ScenarioId = (typeof SCENARIO_IDS)[number];
@@ -153,17 +156,36 @@ function ChoiceCard({ label, pspId, highlight, description }: { label: string; p
   );
 }
 
+function RuleList({ params }: { params: RuleParams }) {
+  return (
+    <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-slate-500">
+      {describeRuleParams(params).map((line, i) => (
+        <li key={i}>{line}</li>
+      ))}
+    </ol>
+  );
+}
+
 /** Always-visible, not hover-only — identity/meaning shouldn't depend on discovering a tooltip. */
-function RouterLegend() {
+function RouterLegend({ r1Params, r2Params, r2Note }: { r1Params: RuleParams; r2Params: RuleParams; r2Note: string }) {
   return (
     <dl className="mb-4 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
       <div>
         <dt className="font-medium text-slate-300">R1</dt>
         <dd>{ROUTER_DESCRIPTIONS.R1}</dd>
+        <details className="mt-1">
+          <summary className="cursor-pointer text-slate-500 hover:text-slate-300">Show R1&apos;s exact rules</summary>
+          <RuleList params={r1Params} />
+        </details>
       </div>
       <div>
         <dt className="font-medium text-slate-300">R2</dt>
         <dd>{ROUTER_DESCRIPTIONS.R2}</dd>
+        <p className="mt-1 text-slate-500">{r2Note}</p>
+        <details className="mt-1">
+          <summary className="cursor-pointer text-slate-500 hover:text-slate-300">Show R2&apos;s exact rules</summary>
+          <RuleList params={r2Params} />
+        </details>
       </div>
       <div>
         <dt className="font-medium text-slate-300">Jev</dt>
@@ -173,7 +195,15 @@ function RouterLegend() {
   );
 }
 
-export default function PlaygroundClient({ presets }: { presets: PresetExamples }) {
+export default function PlaygroundClient({
+  presets,
+  r1Params,
+  r2ParamsByScenario,
+}: {
+  presets: PresetExamples;
+  r1Params: RuleParams;
+  r2ParamsByScenario: Record<ScenarioId, RuleParams>;
+}) {
   const [mode, setMode] = useState<"preset" | "custom">("preset");
   const [scenarioId, setScenarioId] = useState<ScenarioId>("stable");
   const [exampleType, setExampleType] = useState<"disagreement" | "agreement">("disagreement");
@@ -260,19 +290,36 @@ export default function PlaygroundClient({ presets }: { presets: PresetExamples 
 
       {error && <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
 
-      {mode === "preset" && <PresetView example={preset} />}
+      {mode === "preset" && (
+        <PresetView
+          example={preset}
+          r1Params={r1Params}
+          r2Params={r2ParamsByScenario[scenarioId]}
+          r2Note={`Tuned for the ${SCENARIO_LABELS[scenarioId]} scenario.`}
+        />
+      )}
       {mode === "custom" && loading && <Stepper activeStep="calling_jev" live />}
       {mode === "custom" && result && <CustomResultView result={result} />}
     </div>
   );
 }
 
-function PresetView({ example }: { example: PresetExample }) {
+function PresetView({
+  example,
+  r1Params,
+  r2Params,
+  r2Note,
+}: {
+  example: PresetExample;
+  r1Params: RuleParams;
+  r2Params: RuleParams;
+  r2Note: string;
+}) {
   const disagreement = example.jevChoice !== example.r2Choice;
   return (
     <div>
       <Stepper activeStep="done" live={false} />
-      <RouterLegend />
+      <RouterLegend r1Params={r1Params} r2Params={r2Params} r2Note={r2Note} />
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <ChoiceCard label="R1" pspId={example.r1Choice} description={ROUTER_DESCRIPTIONS.R1} />
         <ChoiceCard label="R2" pspId={example.r2Choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.R2} />
@@ -341,7 +388,11 @@ function CustomResultView({ result }: { result: CustomDecisionResult }) {
   return (
     <div>
       <Stepper activeStep="done" live />
-      <RouterLegend />
+      <RouterLegend
+        r1Params={result.r1Params}
+        r2Params={result.r2Params}
+        r2Note={`Rule set: ${result.r2ParamsSource}. Custom mode doesn't retune per transaction.`}
+      />
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <ChoiceCard label="R1" pspId={result.r1Choice} description={ROUTER_DESCRIPTIONS.R1} />
         <ChoiceCard label="R2" pspId={result.r2Choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.R2} />
@@ -436,6 +487,29 @@ function CustomForm({
 }) {
   function updatePsp(id: string, field: keyof PspInput, value: number) {
     setPsps(psps.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+  }
+
+  /** Refuses to drop the last remaining supported currency/method (the schema requires at least one). */
+  function toggleSupportedCurrency(id: string, currency: TransactionInput["currency"]) {
+    setPsps(
+      psps.map((p) => {
+        if (p.id !== id) return p;
+        const has = p.supportedCurrencies.includes(currency);
+        if (has && p.supportedCurrencies.length === 1) return p;
+        return { ...p, supportedCurrencies: has ? p.supportedCurrencies.filter((c) => c !== currency) : [...p.supportedCurrencies, currency] };
+      })
+    );
+  }
+
+  function toggleSupportedMethod(id: string, method: TransactionInput["paymentMethod"]) {
+    setPsps(
+      psps.map((p) => {
+        if (p.id !== id) return p;
+        const has = p.supportedPaymentMethods.includes(method);
+        if (has && p.supportedPaymentMethods.length === 1) return p;
+        return { ...p, supportedPaymentMethods: has ? p.supportedPaymentMethods.filter((m) => m !== method) : [...p.supportedPaymentMethods, method] };
+      })
+    );
   }
 
   return (
@@ -545,7 +619,11 @@ function CustomForm({
         </label>
       </div>
 
-      <h2 className="mb-4 text-sm font-semibold text-slate-200">PSP stats</h2>
+      <h2 className="mb-1 text-sm font-semibold text-slate-200">PSP stats</h2>
+      <p className="mb-4 text-xs text-slate-500">
+        A PSP that doesn&apos;t support this transaction&apos;s currency or payment method is removed from consideration entirely, before R1, R2, or Jev
+        ever see it.
+      </p>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {psps.map((psp) => (
           <div key={psp.id} className="rounded-lg border border-slate-800 p-3">
@@ -555,6 +633,28 @@ function CustomForm({
                 <input type="checkbox" checked={psp.enabled} onChange={(e) => setPsps(psps.map((p) => (p.id === psp.id ? { ...p, enabled: e.target.checked } : p)))} />
                 enabled
               </label>
+            </div>
+            <div className="mb-2">
+              <div className="mb-1 text-xs text-slate-500">Supports currency</div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {CURRENCIES.map((c) => (
+                  <label key={c} className="flex items-center gap-1 text-xs text-slate-400">
+                    <input type="checkbox" checked={psp.supportedCurrencies.includes(c)} onChange={() => toggleSupportedCurrency(psp.id, c)} />
+                    {c}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="mb-3">
+              <div className="mb-1 text-xs text-slate-500">Supports method</div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {PAYMENT_METHODS.map((m) => (
+                  <label key={m} className="flex items-center gap-1 text-xs text-slate-400">
+                    <input type="checkbox" checked={psp.supportedPaymentMethods.includes(m)} onChange={() => toggleSupportedMethod(psp.id, m)} />
+                    {m}
+                  </label>
+                ))}
+              </div>
             </div>
             {(
               [

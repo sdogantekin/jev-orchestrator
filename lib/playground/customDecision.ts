@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { checkEligibility } from "../domain/eligibility.js";
 import type { PspConfig } from "../domain/psp.js";
 import { feeEUR } from "../domain/fees.js";
@@ -7,15 +5,15 @@ import type { PspId, Transaction } from "../domain/types.js";
 import { createInMemoryCache } from "../jev/cache.js";
 import { decideWithJev, type JevDecisionResult } from "../jev/decide.js";
 import type { ObservedPspStats } from "../simulation/observedView.js";
-import { createRuleRouter, r1Router, RuleParamsSchema } from "../routers/ruleRouter.js";
+import { createRuleRouter, DEFAULT_RULE_PARAMS, r1Router, type RuleParams } from "../routers/ruleRouter.js";
+import { loadTunedRuleParams } from "../routers/loadTunedParams.js";
 import type { RouterInput } from "../routers/types.js";
-import { CONFIG_DIR, loadCurrencyConversion, loadStreamConfig } from "../simulation/configLoader.js";
+import { loadCurrencyConversion, loadStreamConfig } from "../simulation/configLoader.js";
 import type { PspInput, TransactionInput } from "./schema.js";
 
 /** R2 has no "custom mode" tuning to fall back to; the Stable scenario's tuned params are a reasonable generic default, shown as such in the UI. */
-function loadGenericR2Params() {
-  const raw = JSON.parse(readFileSync(join(CONFIG_DIR, "tuned", "stable.json"), "utf-8"));
-  return RuleParamsSchema.parse(raw);
+function loadGenericR2Params(): RuleParams {
+  return loadTunedRuleParams("stable");
 }
 
 function buildTransaction(input: TransactionInput): Transaction {
@@ -94,6 +92,8 @@ export type CustomDecisionResult =
       eligibility: EligibilityReport;
       r1Choice: PspId;
       r2Choice: PspId;
+      r1Params: RuleParams;
+      r2Params: RuleParams;
       r2ParamsSource: "stable (generic default)";
       jev: JevDecisionResult;
       outcomesByPsp: Record<string, ReturnType<typeof simulateOnceFromInput>>;
@@ -130,7 +130,8 @@ export async function runCustomDecision(args: {
 
   const routerInput: RouterInput = { tx, eligible, observed };
   const r1Choice = r1Router(routerInput);
-  const r2Router = createRuleRouter(loadGenericR2Params());
+  const r2Params = loadGenericR2Params();
+  const r2Router = createRuleRouter(r2Params);
   const r2Choice = r2Router(routerInput);
 
   const jevResult = await decideWithJev({
@@ -151,5 +152,15 @@ export async function runCustomDecision(args: {
     outcomesByPsp[id] = simulateOnceFromInput(psp, tx.amountEUR);
   }
 
-  return { status: "ok", eligibility, r1Choice, r2Choice, r2ParamsSource: "stable (generic default)", jev: jevResult, outcomesByPsp };
+  return {
+    status: "ok",
+    eligibility,
+    r1Choice,
+    r2Choice,
+    r1Params: DEFAULT_RULE_PARAMS,
+    r2Params,
+    r2ParamsSource: "stable (generic default)",
+    jev: jevResult,
+    outcomesByPsp,
+  };
 }

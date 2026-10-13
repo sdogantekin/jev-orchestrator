@@ -1,0 +1,7 @@
+experiments/fixtures
+.env
+.env.local
+requirements.md
+requirements-v2.md
+MEDIUM_POST.md
+DESIGN.md
