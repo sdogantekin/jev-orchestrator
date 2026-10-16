@@ -1,12 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { Currency, PaymentMethod, PspId } from "../lib/domain/types";
+import type { PspConfig } from "../lib/domain/psp";
+import type { ObservedPspStats } from "../lib/simulation/observedView";
 import type { PspInput, TransactionInput } from "../lib/playground/schema";
-import type { CustomDecisionResult } from "../lib/playground/customDecision";
-import { ROUTER_DESCRIPTIONS, SCENARIO_DESCRIPTIONS } from "../lib/content/glossary";
+import type { JevOnlyResult } from "../lib/playground/customDecision";
+import { minimalPspConfig, resolveCustomState, simulateOnceFromInput, type AmountBucketConfig } from "../lib/playground/liveRouting";
 import { describeRuleParams } from "../lib/routers/describeRules";
-import type { RuleParams } from "../lib/routers/ruleRouter";
-import { CURRENCIES, PAYMENT_METHODS } from "../lib/domain/types";
+import { runRuleRouterTraced, type RuleParams } from "../lib/routers/ruleRouter";
+import type { RouterInput } from "../lib/routers/types";
+import { SCENARIO_DESCRIPTIONS } from "../lib/content/glossary";
 
 const SCENARIO_IDS = ["stable", "drift", "thin_data", "cold_start", "conflicting_objectives", "eligibility_mix"] as const;
 type ScenarioId = (typeof SCENARIO_IDS)[number];
@@ -19,14 +23,33 @@ const SCENARIO_LABELS: Record<ScenarioId, string> = {
   eligibility_mix: "Eligibility mix",
 };
 
+const PSP_IDS = ["alpha", "beta", "gamma"] as const;
+const DISPLAY_NAME: Record<PspId, string> = { alpha: "PSP A", beta: "PSP B", gamma: "PSP C" };
+
+// Palette, lifted from the Playground.dc.html design.
+const BG = "#161615";
+const CARD_BG = "#1c1c1a";
+const TEXT = "#f0efec";
+const MUTED1 = "#c9c8c2";
+const MUTED2 = "#a3a29c";
+const MUTED3 = "#8f8e88";
+const INDIGO = "#9aa0ff";
+const INDIGO_LT = "#b4b9ff";
+const INDIGO_PALE = "#c9ccff";
+const INDIGO_DARK = "#14143a";
+const PINK = "oklch(0.76 0.15 350)";
+const GREEN = "oklch(0.78 0.14 160)";
+const RED = "oklch(0.72 0.15 25)";
+const TEAL = "oklch(0.82 0.11 200)";
+
 type PresetExample = {
   scenarioId: string;
   transactionIndex: number;
   transaction: Record<string, unknown>;
   eligiblePspIds: string[];
-  observed: Record<string, { acceptanceOverall: { value: number | null; sampleSize: number }; acceptanceSegment: { value: number | null; sampleSize: number } }>;
+  observed: Record<string, ObservedPspStats>;
   schema: unknown;
-  request: unknown;
+  request: { state?: { psps?: Array<{ id: string; fixed_fee_eur: number }> } };
   rawResponse: unknown;
   jevChoice: string;
   jevProbabilities: Record<string, number>;
@@ -94,115 +117,91 @@ const DEFAULT_PSPS: PspInput[] = [
   },
 ];
 
-const STEPS = ["Transaction", "Rules (R1/R2)", "Jev", "Route", "Simulated outcome"];
-
-function CopyableJson({ data }: { data: unknown }) {
-  const [copied, setCopied] = useState(false);
-  const text = JSON.stringify(data, null, 2);
-  return (
-    <div className="relative">
-      <button
-        onClick={async () => {
-          await navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        }}
-        className="absolute right-2 top-2 rounded bg-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-600"
-      >
-        {copied ? "Copied" : "Copy"}
-      </button>
-      <pre className="max-h-96 overflow-auto rounded-lg bg-slate-950 p-3 pt-10 text-xs text-emerald-300">{text}</pre>
-    </div>
-  );
+function pct(v: number): string {
+  return `${Math.round(v * 100)}%`;
 }
 
-type StepperStage = "idle" | "calling_jev" | "done";
+// ---------- shared render-model types, filled identically whether the data came from a replayed preset or a live custom run ----------
 
-/** A flow diagram of the decision pipeline with the current step highlighted — "calling_jev" is the one stage with real, perceptible latency (the live OpenRouter call); everything else is effectively instant. */
-function Stepper({ activeStep, live }: { activeStep: StepperStage; live: boolean }) {
-  const activeIndex = activeStep === "idle" ? 0 : activeStep === "calling_jev" ? 2 : STEPS.length - 1;
-  return (
-    <div className="mb-6">
-      <div className="flex flex-wrap gap-2">
-        {STEPS.map((step, i) => {
-          const state = i < activeIndex ? "done" : i === activeIndex ? "current" : "upcoming";
-          return (
-            <div
-              key={step}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
-                state === "current" ? "bg-indigo-500 text-white" : state === "done" ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-800 text-slate-500"
-              }`}
-            >
-              {state === "current" && activeStep === "calling_jev" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />}
-              {i + 1}. {step}
-            </div>
-          );
-        })}
-      </div>
-      {!live && activeStep === "done" && <p className="mt-1.5 text-xs text-slate-500">Replayed from a recorded decision — no live call made just now.</p>}
-    </div>
-  );
+interface RouterCardModel {
+  id: string;
+  kindLabel: string;
+  how: string;
+  pickLabel: string;
+  why: string;
+  color: string;
+  tagLabel: string;
+  tagFg: string;
+  tagBg: string;
+  isJev: boolean;
+  dim: boolean;
 }
 
-function ChoiceCard({ label, pspId, highlight, description }: { label: string; pspId: string; highlight?: boolean; description?: string }) {
-  return (
-    <div className={`rounded-lg border p-3 ${highlight ? "border-amber-500 bg-amber-500/10" : "border-slate-800 bg-slate-900/60"}`} title={description}>
-      <div className="flex items-center gap-1 text-xs uppercase tracking-wide text-slate-400">
-        {label}
-        {description && <span className="cursor-help text-slate-500">ⓘ</span>}
-      </div>
-      <div className="mt-1 text-xl font-semibold text-slate-100">{pspId}</div>
-    </div>
-  );
+interface VerdictModel {
+  eyebrow: string;
+  title: string;
+  body: string;
+  color: string;
+  border: string;
+  bg: string;
 }
 
-function RuleList({ params }: { params: RuleParams }) {
-  return (
-    <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-slate-500">
-      {describeRuleParams(params).map((line, i) => (
-        <li key={i}>{line}</li>
-      ))}
-    </ol>
-  );
+interface RuleBookRowModel {
+  n: number;
+  text: string;
+  state: string;
+  fired: boolean;
+  dim: boolean;
 }
 
-/** Always-visible, not hover-only — identity/meaning shouldn't depend on discovering a tooltip. */
-function RouterLegend({ r1Params, r2Params, r2Note }: { r1Params: RuleParams; r2Params: RuleParams; r2Note: string }) {
-  return (
-    <dl className="mb-4 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
-      <div>
-        <dt className="font-medium text-slate-300">R1</dt>
-        <dd>{ROUTER_DESCRIPTIONS.R1}</dd>
-        <details className="mt-1">
-          <summary className="cursor-pointer text-slate-500 hover:text-slate-300">Show R1&apos;s exact rules</summary>
-          <RuleList params={r1Params} />
-        </details>
-      </div>
-      <div>
-        <dt className="font-medium text-slate-300">R2</dt>
-        <dd>{ROUTER_DESCRIPTIONS.R2}</dd>
-        <p className="mt-1 text-slate-500">{r2Note}</p>
-        <details className="mt-1">
-          <summary className="cursor-pointer text-slate-500 hover:text-slate-300">Show R2&apos;s exact rules</summary>
-          <RuleList params={r2Params} />
-        </details>
-      </div>
-      <div>
-        <dt className="font-medium text-slate-300">Jev</dt>
-        <dd>{ROUTER_DESCRIPTIONS.Jev}</dd>
-      </div>
-    </dl>
-  );
+interface RuleBookModel {
+  title: string;
+  note: string;
+  rows: RuleBookRowModel[];
+}
+
+interface OutcomeModel {
+  who: string;
+  psp: string;
+  status: "Approved" | "Declined";
+  cost: string;
+  color: string;
+}
+
+function traceToRows(params: RuleParams, trace: { n: number; fired: boolean }[]): RuleBookRowModel[] {
+  const text = describeRuleParams(params);
+  const firedOrderedIdx = trace.slice(0, 5).findIndex((r) => r.fired);
+  return trace.map((r, i) => {
+    let state: string;
+    let dim: boolean;
+    if (i < 5) {
+      state = r.fired ? "MATCHED" : i < firedOrderedIdx ? "skipped" : "not reached";
+      dim = !r.fired;
+    } else {
+      state = r.fired ? "USED" : "not needed";
+      dim = !r.fired;
+    }
+    return { n: r.n, text: text[i] ?? "", state, fired: r.fired, dim };
+  });
+}
+
+function mkRuleBook(title: string, note: string, params: RuleParams, routerInput: RouterInput): { choice: PspId; book: RuleBookModel } {
+  const { choice, trace } = runRuleRouterTraced(params, routerInput);
+  return { choice, book: { title, note, rows: traceToRows(params, trace) } };
 }
 
 export default function PlaygroundClient({
   presets,
   r1Params,
   r2ParamsByScenario,
+  amountConfig,
+  conversionRates,
 }: {
   presets: PresetExamples;
   r1Params: RuleParams;
   r2ParamsByScenario: Record<ScenarioId, RuleParams>;
+  amountConfig: AmountBucketConfig;
+  conversionRates: Record<Currency, number>;
 }) {
   const [mode, setMode] = useState<"preset" | "custom">("preset");
   const [scenarioId, setScenarioId] = useState<ScenarioId>("stable");
@@ -210,16 +209,22 @@ export default function PlaygroundClient({
 
   const [transaction, setTransaction] = useState<TransactionInput>(DEFAULT_TRANSACTION);
   const [psps, setPsps] = useState<PspInput[]>(DEFAULT_PSPS);
-  const [result, setResult] = useState<CustomDecisionResult | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const [jevResult, setJevResult] = useState<JevOnlyResult | null>(null);
+  const [jevSnapshot, setJevSnapshot] = useState<{ transaction: TransactionInput; psps: PspInput[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const preset = presets[scenarioId][exampleType];
+  const [rolls, setRolls] = useState<number[]>([Math.random(), Math.random(), Math.random()]);
+  const [rawOpen, setRawOpen] = useState(false);
+  const [rawTab, setRawTab] = useState(0);
+  const [copied, setCopied] = useState(false);
 
-  async function handleSubmit() {
+  async function askJev() {
+    if (mode === "preset" || loading) return;
     setLoading(true);
     setError(null);
-    setResult(null);
     try {
       const res = await fetch("/api/decision", {
         method: "POST",
@@ -230,7 +235,9 @@ export default function PlaygroundClient({
       if (!res.ok) {
         setError(data.error ?? "Something went wrong.");
       } else {
-        setResult(data);
+        setJevResult(data as JevOnlyResult);
+        setJevSnapshot({ transaction, psps });
+        setRolls([Math.random(), Math.random(), Math.random()]);
       }
     } catch {
       setError("Jev could not be reached. No AI routing decision was made.");
@@ -239,258 +246,7 @@ export default function PlaygroundClient({
     }
   }
 
-  const modeLabel = useMemo(
-    () => (mode === "custom" ? "Simulating from your inputs" : `Simulating from preset world: ${SCENARIO_LABELS[scenarioId]}`),
-    [mode, scenarioId]
-  );
-
-  return (
-    <div>
-      <h1 className="mb-2 text-2xl font-bold text-slate-100">Playground</h1>
-      <p className="mb-4 max-w-2xl text-slate-400">
-        Set up a transaction and PSP stats yourself, or pick a preset scenario from the experiment. Watch R1, R2 and Jev route the same decision, side
-        by side.
-      </p>
-
-      <div className="mb-4 inline-flex rounded-lg border border-slate-700 p-1">
-        <button
-          onClick={() => setMode("preset")}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium ${mode === "preset" ? "bg-indigo-500 text-white" : "text-slate-300"}`}
-        >
-          Preset scenario
-        </button>
-        <button
-          onClick={() => setMode("custom")}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium ${mode === "custom" ? "bg-indigo-500 text-white" : "text-slate-300"}`}
-        >
-          Custom inputs
-        </button>
-      </div>
-
-      <div className="mb-6 inline-block rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-slate-300">{modeLabel}</div>
-
-      {mode === "preset" ? (
-        <div className="mb-8 flex flex-wrap gap-3">
-          <select value={scenarioId} onChange={(e) => setScenarioId(e.target.value as ScenarioId)} className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100">
-            {SCENARIO_IDS.map((id) => (
-              <option key={id} value={id}>
-                {SCENARIO_LABELS[id]}
-              </option>
-            ))}
-          </select>
-          <select value={exampleType} onChange={(e) => setExampleType(e.target.value as "disagreement" | "agreement")} className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100">
-            <option value="disagreement">Example where Jev and R2 disagree</option>
-            <option value="agreement">Example where Jev and R2 agree</option>
-          </select>
-          <p className="w-full text-sm text-slate-400">{SCENARIO_DESCRIPTIONS[scenarioId]}</p>
-        </div>
-      ) : (
-        <CustomForm transaction={transaction} setTransaction={setTransaction} psps={psps} setPsps={setPsps} onSubmit={handleSubmit} loading={loading} />
-      )}
-
-      {error && <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
-
-      {mode === "preset" && (
-        <PresetView
-          example={preset}
-          r1Params={r1Params}
-          r2Params={r2ParamsByScenario[scenarioId]}
-          r2Note={`Tuned for the ${SCENARIO_LABELS[scenarioId]} scenario.`}
-        />
-      )}
-      {mode === "custom" && loading && <Stepper activeStep="calling_jev" live />}
-      {mode === "custom" && result && <CustomResultView result={result} />}
-    </div>
-  );
-}
-
-function PresetView({
-  example,
-  r1Params,
-  r2Params,
-  r2Note,
-}: {
-  example: PresetExample;
-  r1Params: RuleParams;
-  r2Params: RuleParams;
-  r2Note: string;
-}) {
-  const disagreement = example.jevChoice !== example.r2Choice;
-  return (
-    <div>
-      <Stepper activeStep="done" live={false} />
-      <RouterLegend r1Params={r1Params} r2Params={r2Params} r2Note={r2Note} />
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ChoiceCard label="R1" pspId={example.r1Choice} description={ROUTER_DESCRIPTIONS.R1} />
-        <ChoiceCard label="R2" pspId={example.r2Choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.R2} />
-        <ChoiceCard label="Jev" pspId={example.jevChoice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.Jev} />
-        <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-          <div className="text-xs uppercase tracking-wide text-slate-400">Jev confidence</div>
-          <div className="mt-1 text-xl font-semibold text-slate-100">{example.jevConfidence?.toFixed(2) ?? "n/a"}</div>
-        </div>
-      </div>
-      {disagreement && (
-        <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-200">
-          Jev and R2 disagree on this transaction: Jev picked <strong>{example.jevChoice}</strong>, R2 picked <strong>{example.r2Choice}</strong>.
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h3 className="mb-2 text-sm font-semibold text-slate-200">Jev probabilities</h3>
-        <div className="flex gap-4 text-sm text-slate-300">
-          {Object.entries(example.jevProbabilities).map(([id, p]) => (
-            <span key={id}>
-              {id}: {(p * 100).toFixed(0)}%
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="mb-2 text-sm font-semibold text-slate-200">Simulated outcome per router&apos;s choice</h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {Object.entries(example.outcomesByPsp).map(([id, o]) => (
-            <div key={id} className="rounded-lg border border-slate-800 p-3 text-sm">
-              <div className="font-medium text-slate-200">{id}</div>
-              <div className={o.authorized ? "text-emerald-400" : "text-red-400"}>{o.authorized ? "Authorized" : "Declined"}</div>
-              <div className="text-slate-400">€{o.netCostEUR.toFixed(4)} net cost</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <RawDataSection schema={example.schema} request={example.request} rawResponse={example.rawResponse} />
-    </div>
-  );
-}
-
-function CustomResultView({ result }: { result: CustomDecisionResult }) {
-  if (result.status === "zero_eligible") {
-    return <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-red-300">No eligible simulated PSP is available for this transaction.</div>;
-  }
-  if (result.status === "single_eligible") {
-    return (
-      <div>
-        <Stepper activeStep="done" live />
-        <p className="mb-3 text-slate-300">Only one PSP is eligible — routed deterministically, Jev skipped.</p>
-        <ChoiceCard label="Route" pspId={result.chosenPspId} />
-        <div className="mt-4 rounded-lg border border-slate-800 p-3 text-sm">
-          <div className={result.outcome.authorized ? "text-emerald-400" : "text-red-400"}>{result.outcome.authorized ? "Authorized" : "Declined"}</div>
-          <div className="text-slate-400">€{result.outcome.netCostEUR.toFixed(4)} net cost</div>
-        </div>
-      </div>
-    );
-  }
-
-  const jev = result.jev;
-  const disagreement = jev.status === "ok" && jev.choice !== result.r2Choice;
-
-  return (
-    <div>
-      <Stepper activeStep="done" live />
-      <RouterLegend
-        r1Params={result.r1Params}
-        r2Params={result.r2Params}
-        r2Note={`Rule set: ${result.r2ParamsSource}. Custom mode doesn't retune per transaction.`}
-      />
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ChoiceCard label="R1" pspId={result.r1Choice} description={ROUTER_DESCRIPTIONS.R1} />
-        <ChoiceCard label="R2" pspId={result.r2Choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.R2} />
-        {jev.status === "ok" ? (
-          <ChoiceCard label="Jev" pspId={jev.choice} highlight={disagreement} description={ROUTER_DESCRIPTIONS.Jev} />
-        ) : (
-          <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3">
-            <div className="text-xs uppercase tracking-wide text-red-300">Jev</div>
-            <div className="mt-1 text-sm text-red-300">{jev.status === "invalid" ? "Invalid choice" : "Unreachable"}</div>
-          </div>
-        )}
-        {jev.status === "ok" && (
-          <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
-            <div className="text-xs uppercase tracking-wide text-slate-400">Jev confidence</div>
-            <div className="mt-1 text-xl font-semibold text-slate-100">{jev.confidence?.toFixed(2) ?? "n/a"}</div>
-          </div>
-        )}
-      </div>
-
-      {disagreement && (
-        <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-200">
-          Jev and R2 disagree: Jev picked <strong>{(jev as { choice: string }).choice}</strong>, R2 picked <strong>{result.r2Choice}</strong>.
-        </div>
-      )}
-
-      {jev.status === "ok" && (
-        <div className="mb-6">
-          <h3 className="mb-2 text-sm font-semibold text-slate-200">Jev probabilities</h3>
-          <div className="flex gap-4 text-sm text-slate-300">
-            {Object.entries(jev.probabilities).map(([id, p]) => (
-              <span key={id}>
-                {id}: {(p * 100).toFixed(0)}%
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h3 className="mb-2 text-sm font-semibold text-slate-200">Simulated outcome per router&apos;s choice</h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {Object.entries(result.outcomesByPsp).map(([id, o]) => (
-            <div key={id} className="rounded-lg border border-slate-800 p-3 text-sm">
-              <div className="font-medium text-slate-200">{id}</div>
-              <div className={o.authorized ? "text-emerald-400" : "text-red-400"}>{o.authorized ? "Authorized" : "Declined"}</div>
-              <div className="text-slate-400">€{o.netCostEUR.toFixed(4)} net cost</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {jev.status === "ok" && <RawDataSection schema={jev.schema} request={jev.request} rawResponse={jev.rawResponse} />}
-    </div>
-  );
-}
-
-function RawDataSection({ schema, request, rawResponse }: { schema: unknown; request: unknown; rawResponse: unknown }) {
-  return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      {schema !== null && (
-        <div>
-          <h3 className="mb-2 text-sm font-semibold text-slate-200">Decision Schema</h3>
-          <CopyableJson data={schema} />
-        </div>
-      )}
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-slate-200">Sanitized request to Jev</h3>
-        <CopyableJson data={request} />
-      </div>
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-slate-200">Raw response from Jev</h3>
-        <CopyableJson data={rawResponse} />
-      </div>
-    </div>
-  );
-}
-
-function CustomForm({
-  transaction,
-  setTransaction,
-  psps,
-  setPsps,
-  onSubmit,
-  loading,
-}: {
-  transaction: TransactionInput;
-  setTransaction: (t: TransactionInput) => void;
-  psps: PspInput[];
-  setPsps: (p: PspInput[]) => void;
-  onSubmit: () => void;
-  loading: boolean;
-}) {
-  function updatePsp(id: string, field: keyof PspInput, value: number) {
-    setPsps(psps.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
-  }
-
-  /** Refuses to drop the last remaining supported currency/method (the schema requires at least one). */
-  function toggleSupportedCurrency(id: string, currency: TransactionInput["currency"]) {
+  function toggleSupportedCurrency(id: string, currency: Currency) {
     setPsps(
       psps.map((p) => {
         if (p.id !== id) return p;
@@ -501,7 +257,7 @@ function CustomForm({
     );
   }
 
-  function toggleSupportedMethod(id: string, method: TransactionInput["paymentMethod"]) {
+  function toggleSupportedMethod(id: string, method: PaymentMethod) {
     setPsps(
       psps.map((p) => {
         if (p.id !== id) return p;
@@ -512,181 +268,1093 @@ function CustomForm({
     );
   }
 
-  return (
-    <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h2 className="mb-4 text-sm font-semibold text-slate-200">Transaction</h2>
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <label className="text-xs text-slate-400">
-          Amount
-          <input
-            type="number"
-            min={0.01}
-            step={0.01}
-            value={transaction.amount}
-            onChange={(e) => setTransaction({ ...transaction, amount: Number(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-          />
-        </label>
-        <label className="text-xs text-slate-400">
-          Currency
-          <select
-            value={transaction.currency}
-            onChange={(e) => setTransaction({ ...transaction, currency: e.target.value as TransactionInput["currency"] })}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-          >
-            {["EUR", "GBP", "USD"].map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-slate-400">
-          Country
-          <select
-            value={transaction.country}
-            onChange={(e) => setTransaction({ ...transaction, country: e.target.value as TransactionInput["country"] })}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-          >
-            {["DE", "NL", "FR", "UK", "US"].map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-slate-400">
-          Payment method
-          <select
-            value={transaction.paymentMethod}
-            onChange={(e) => setTransaction({ ...transaction, paymentMethod: e.target.value as TransactionInput["paymentMethod"] })}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-          >
-            {["card", "paypal", "sepa_debit"].map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </label>
-        {transaction.paymentMethod === "card" && (
-          <label className="text-xs text-slate-400">
-            Card scheme
-            <select
-              value={transaction.cardScheme ?? "visa"}
-              onChange={(e) => setTransaction({ ...transaction, cardScheme: e.target.value as TransactionInput["cardScheme"] })}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-            >
-              {["visa", "mastercard", "amex"].map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label className="text-xs text-slate-400">
-          Device
-          <select
-            value={transaction.device}
-            onChange={(e) => setTransaction({ ...transaction, device: e.target.value as TransactionInput["device"] })}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-          >
-            {["desktop", "mobile"].map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-slate-400">
-          Customer
-          <select
-            value={transaction.customerType}
-            onChange={(e) => setTransaction({ ...transaction, customerType: e.target.value as TransactionInput["customerType"] })}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100"
-          >
-            {["new", "returning"].map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-xs text-slate-400">
-          <input type="checkbox" checked={transaction.threeDsEligible} onChange={(e) => setTransaction({ ...transaction, threeDsEligible: e.target.checked })} />
-          3DS eligible
-        </label>
-      </div>
+  // ---------- live custom-mode computation: instant, no network call ----------
+  const live = useMemo(() => resolveCustomState(transaction, psps, amountConfig, conversionRates), [transaction, psps, amountConfig, conversionRates]);
+  const customNone = mode === "custom" && live.eligible.length === 0;
+  const customSingle = mode === "custom" && live.eligible.length === 1;
+  const customStale = jevSnapshot !== null && (JSON.stringify(jevSnapshot.transaction) !== JSON.stringify(transaction) || JSON.stringify(jevSnapshot.psps) !== JSON.stringify(psps));
+  const customUnasked = jevSnapshot === null;
 
-      <h2 className="mb-1 text-sm font-semibold text-slate-200">PSP stats</h2>
-      <p className="mb-4 text-xs text-slate-500">
-        A PSP that doesn&apos;t support this transaction&apos;s currency or payment method is removed from consideration entirely, before R1, R2, or Jev
-        ever see it.
+  const preset = presets[scenarioId][exampleType];
+
+  // ---------- build the shared render model, from whichever source is active ----------
+  const model = useMemo(() => {
+    if (mode === "preset") {
+      const tx = preset.transaction as unknown as RouterInput["tx"];
+      const observed: Partial<Record<PspId, ObservedPspStats>> = {};
+      for (const id of preset.eligiblePspIds) observed[id as PspId] = preset.observed[id];
+      const eligible = (preset.request.state?.psps ?? []).map((p) => minimalPspConfig(p.id as PspId, p.fixed_fee_eur));
+      const routerInput: RouterInput = { tx, eligible, observed };
+
+      const r2Params = r2ParamsByScenario[scenarioId];
+      const r1 = mkRuleBook("R1 · hand-tuned", "Same numbers in every scenario.", r1Params, routerInput);
+      const r2 = mkRuleBook("R2 · grid-search tuned", `Tuned for "${SCENARIO_LABELS[scenarioId]}": large-payment line at €${r2Params.largeThreshold}.`, r2Params, routerInput);
+
+      const jevId = preset.jevChoice as PspId;
+      const conf = preset.jevConfidence ?? Math.max(...Object.values(preset.jevProbabilities));
+      return buildModel({
+        eligiblePspIds: preset.eligiblePspIds as PspId[],
+        r1Choice: r1.choice,
+        r2Choice: r2.choice,
+        r1Book: r1.book,
+        r2Book: r2.book,
+        jevState: { kind: "ok", choice: jevId, probabilities: preset.jevProbabilities, confidence: conf, stale: false, tag: "Replayed from test", tagBg: INDIGO_PALE, tagFg: INDIGO_DARK },
+        amountText: `${Math.round(Number((preset.transaction as Record<string, unknown>).amount))} ${(preset.transaction as Record<string, unknown>).currency}`,
+        inputRows: buildInputRows(preset.eligiblePspIds as PspId[], observed, tx),
+        outcomes: buildOutcomesFromPreset(preset),
+      });
+    }
+
+    if (customNone) return null;
+    if (customSingle) return null;
+
+    const routerInput: RouterInput = { tx: live.tx, eligible: live.eligible, observed: live.observed };
+    const r2Params = r2ParamsByScenario.stable;
+    const r1 = mkRuleBook("R1 · hand-tuned", "Same numbers in every scenario.", r1Params, routerInput);
+    const r2 = mkRuleBook("R2 · grid-search tuned", "One generic set, tuned on Stable. Custom mode doesn't retune per transaction.", r2Params, routerInput);
+
+    const eligibleIds = live.eligible.map((p) => p.id);
+    const jevState: JevState = customUnasked
+      ? { kind: "unasked" }
+      : jevResult === null
+        ? { kind: "unasked" }
+        : jevResult.status !== "ok"
+          ? { kind: "failed" }
+          : jevResult.jev.status !== "ok"
+            ? { kind: "invalid", reason: jevResult.jev.status === "invalid" ? "Invalid choice" : "Unreachable" }
+            : {
+                kind: "ok",
+                choice: jevResult.jev.choice,
+                probabilities: jevResult.jev.probabilities,
+                confidence: jevResult.jev.confidence ?? Math.max(...Object.values(jevResult.jev.probabilities)),
+                stale: customStale,
+                tag: customStale ? "Out of date" : "Live model",
+                tagBg: customStale ? "#e8c88a" : TEAL,
+                tagFg: customStale ? INDIGO_DARK : INDIGO_DARK,
+              };
+
+    return buildModel({
+      eligiblePspIds: eligibleIds,
+      r1Choice: r1.choice,
+      r2Choice: r2.choice,
+      r1Book: r1.book,
+      r2Book: r2.book,
+      jevState,
+      amountText: `${live.tx.amount.toLocaleString()} ${live.tx.currency}`,
+      inputRows: buildInputRows(eligibleIds, live.observed, live.tx),
+      outcomes: buildOutcomesFromLive(r1.choice, r2.choice, jevState, live),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, preset, scenarioId, live, customNone, customSingle, customStale, customUnasked, jevResult, rolls, r1Params, r2ParamsByScenario]);
+
+  const modeLabel =
+    mode === "custom"
+      ? "Jev answers live from a hosted model. Each ask costs real money and is rate-limited, so the button does the asking."
+      : "Replaying recorded decisions from the original experiment. Instant and free, so click around.";
+
+  return (
+    <div style={{ background: BG, color: TEXT, margin: "-32px -16px", padding: "32px 16px", fontFamily: "'Instrument Sans', Helvetica, Arial, sans-serif", fontSize: 15, lineHeight: 1.5 }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <Hero />
+
+        <Step
+          n={1}
+          title="Choose the payment"
+          action={
+            <div style={{ display: "flex", gap: 4, padding: 4, border: "1px solid rgba(255,255,255,.12)", borderRadius: 999 }}>
+              <PillButton active={mode === "preset"} onClick={() => setMode("preset")}>
+                Replay · free
+              </PillButton>
+              <PillButton active={mode === "custom"} onClick={() => setMode("custom")}>
+                Your numbers · live AI
+              </PillButton>
+            </div>
+          }
+        >
+          <div style={{ fontSize: 14, color: MUTED1, display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ marginTop: 7, width: 8, height: 8, borderRadius: "50%", flex: "none", background: mode === "preset" ? INDIGO_PALE : TEAL }} />
+            <span>{modeLabel}</span>
+          </div>
+
+          {mode === "preset" ? (
+            <PresetPicker scenarioId={scenarioId} setScenarioId={setScenarioId} exampleType={exampleType} setExampleType={setExampleType} />
+          ) : (
+            <CustomForm
+              transaction={transaction}
+              setTransaction={setTransaction}
+              psps={psps}
+              setPsps={setPsps}
+              toggleSupportedCurrency={toggleSupportedCurrency}
+              toggleSupportedMethod={toggleSupportedMethod}
+              moreOpen={moreOpen}
+              setMoreOpen={setMoreOpen}
+              onReset={() => {
+                setTransaction(DEFAULT_TRANSACTION);
+                setPsps(DEFAULT_PSPS);
+                setJevResult(null);
+                setJevSnapshot(null);
+              }}
+              eligibility={live.eligibility}
+            />
+          )}
+        </Step>
+
+        {error && (
+          <div style={{ marginTop: -24, marginBottom: 24, borderRadius: 12, padding: 14, border: `1px solid ${RED}`, background: "oklch(0.72 0.15 25 / .08)", color: TEXT, fontSize: 14 }}>
+            {error}
+          </div>
+        )}
+
+        {customNone && (
+          <div style={{ borderRadius: 18, padding: "26px 28px", border: `1px solid oklch(0.72 0.15 25 / .5)`, background: "oklch(0.72 0.15 25 / .07)", marginBottom: 56 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: ".06em", color: RED }}>NO ELIGIBLE PSP</div>
+            <div style={{ fontSize: 22, fontWeight: 600, marginTop: 6 }}>Nobody can take this payment.</div>
+            <div style={{ color: MUTED1, marginTop: 6 }}>Every PSP is off or doesn&apos;t support this payment method. Turn one back on.</div>
+          </div>
+        )}
+
+        {customSingle && (
+          <SingleEligibleView eligible={live.eligible[0]!} amountEUR={live.tx.amountEUR} />
+        )}
+
+        {model && (
+          <>
+            <Step n={2} title="Three routers read the same data">
+              <div style={{ border: "1px solid rgba(255,255,255,.14)", borderRadius: 16, padding: "18px 20px", background: CARD_BG, display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, alignItems: "baseline" }}>
+                  <span style={{ fontWeight: 600 }}>A {model.amountText} payment</span>
+                  <span style={{ fontSize: 13, color: MUTED2 }}>Identical input, sent to all three</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10 }}>
+                  {model.inputRows.map((ir, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14, borderRadius: 8, padding: "8px 12px", background: "rgba(255,255,255,.04)" }}>
+                      <span style={{ color: MUTED1 }}>{ir.name}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>{ir.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))", gap: 12 }}>
+                {model.routers.map((r) => (
+                  <div
+                    key={r.id}
+                    style={{
+                      borderRadius: 16,
+                      padding: 20,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                      border: `1px solid ${r.isJev ? "rgba(154,160,255,.45)" : "rgba(255,255,255,.12)"}`,
+                      background: r.isJev ? "rgba(154,160,255,.07)" : CARD_BG,
+                      opacity: r.dim ? 0.55 : 1,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: r.color }}>
+                        {r.id} · {r.kindLabel}
+                      </span>
+                      <span style={{ fontSize: 11.5, borderRadius: 999, padding: "2px 9px", color: r.tagFg, background: r.tagBg }}>{r.tagLabel}</span>
+                    </div>
+                    <div style={{ fontSize: 13.5, color: MUTED2, minHeight: 40 }}>{r.how}</div>
+                    <div style={{ fontSize: 12, color: MUTED2, letterSpacing: ".05em" }}>CHOOSES</div>
+                    <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: "-.02em", lineHeight: 1 }}>{r.pickLabel}</div>
+                    <div style={{ fontSize: 13.5, color: MUTED1 }}>{r.why}</div>
+                    {r.isJev && mode === "custom" && (
+                      <button
+                        onClick={askJev}
+                        disabled={loading}
+                        style={{ marginTop: 6, cursor: "pointer", font: "inherit", fontWeight: 600, fontSize: 14, border: 0, borderRadius: 10, padding: "10px 14px", color: INDIGO_DARK, background: loading ? "#6b6e99" : INDIGO }}
+                      >
+                        {loading ? "Asking Jev…" : customUnasked ? "Ask Jev" : "Ask Jev again"}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <VerdictBanner v={model.verdict} />
+
+              <div>
+                <div style={{ fontWeight: 600 }}>
+                  Open the rule books <span style={{ fontWeight: 400, color: MUTED2, fontSize: 14 }}>· the first matching rule wins; the highlighted one decided this payment</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: 14, marginTop: 12 }}>
+                  {[model.r1Book, model.r2Book].map((rb) => (
+                    <details key={rb.title} style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 16, padding: "16px 18px", background: CARD_BG }}>
+                      <summary style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: 2, listStyle: "none" }}>
+                        <span style={{ fontWeight: 600 }}>{rb.title}</span>
+                        <span style={{ fontSize: 13, color: MUTED2 }}>{rb.note}</span>
+                      </summary>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
+                        {rb.rows.map((row) => (
+                          <div
+                            key={row.n}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "22px 1fr auto",
+                              gap: 10,
+                              alignItems: "baseline",
+                              border: `1px solid ${row.fired ? "oklch(0.76 0.15 350 / .6)" : "rgba(255,255,255,.08)"}`,
+                              background: row.fired ? "oklch(0.76 0.15 350 / .1)" : "transparent",
+                              borderRadius: 10,
+                              padding: "9px 12px",
+                              opacity: row.dim ? 0.55 : 1,
+                            }}
+                          >
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: MUTED2 }}>{row.n}</span>
+                            <span style={{ fontSize: 14, fontWeight: row.fired ? 600 : 400 }}>{row.text}</span>
+                            <span style={{ fontSize: 11, letterSpacing: ".05em", color: row.fired ? PINK : MUTED2 }}>{row.state}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            </Step>
+
+            <Step n={3} title="Why Jev chose that">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 }}>
+                <div style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 22, background: CARD_BG, display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div style={{ fontWeight: 600 }}>How likely Jev thought each PSP was best</div>
+                  {model.probs.map((p) => (
+                    <div key={p.name} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                        <span style={{ fontWeight: p.top ? 600 : 400 }}>{p.name}</span>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{p.text}</span>
+                      </div>
+                      <div style={{ height: 10, borderRadius: 5, background: "rgba(255,255,255,.07)", overflow: "hidden" }}>
+                        <div style={{ height: "100%", borderRadius: 5, width: p.width, background: p.top ? INDIGO : "rgba(255,255,255,.3)" }} />
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ fontSize: 13.5, color: MUTED2 }}>{model.confText == null ? "Jev hasn't answered yet." : `Jev is ${model.confText} sure of its top pick.`}</div>
+                </div>
+                <div style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 22, background: CARD_BG, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontWeight: 600 }}>Sounding sure isn&apos;t being right</div>
+                  <div style={{ color: MUTED1 }}>
+                    In the full test, Jev&apos;s confidence barely tracked how often it actually picked the better PSP. A 90% answer was not much more trustworthy than a 60%
+                    one.
+                  </div>
+                  <a href="/results" style={{ fontSize: 14 }}>
+                    See the calibration chart on Results →
+                  </a>
+                </div>
+              </div>
+            </Step>
+
+            <Step n={4} title="What would have happened" action={mode === "custom" && <TextButton onClick={() => setRolls([Math.random(), Math.random(), Math.random()])}>Roll the dice again</TextButton>}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: MUTED1, maxWidth: 720 }}>
+                <span style={{ flex: "none", fontSize: 11.5, borderRadius: 4, padding: "2px 8px", border: "1px dashed " + MUTED2, color: TEXT, marginTop: 2 }}>SIMULATED</span>
+                <span>Not from Jev or the real world. Each outcome is a random draw against the PSP&apos;s approval rate{mode === "custom" ? ", so re-rolling can change it" : ""}. Only the routers&apos; picks above are real decisions.</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 12 }}>
+                {model.outcomes.map((o, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      borderRadius: 16,
+                      padding: 20,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      border: `1px dashed ${o.color}`,
+                      background: "repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 8px,transparent 8px 16px)",
+                    }}
+                  >
+                    <div style={{ fontSize: 13, color: MUTED2 }}>{o.who} sent it to</div>
+                    <div style={{ fontSize: 20, fontWeight: 600 }}>{o.psp}</div>
+                    <div style={{ fontSize: 26, fontWeight: 600, color: o.color, letterSpacing: "-.02em" }}>{o.status}</div>
+                    <div style={{ fontSize: 14, color: MUTED1 }}>{o.cost}</div>
+                  </div>
+                ))}
+              </div>
+            </Step>
+
+            <RawEvidence
+              open={rawOpen}
+              setOpen={setRawOpen}
+              tab={rawTab}
+              setTab={setRawTab}
+              copied={copied}
+              setCopied={setCopied}
+              mode={mode}
+              preset={mode === "preset" ? preset : null}
+              jevResult={jevResult}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- building blocks ----------
+
+function Hero() {
+  return (
+    <section style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 760, marginBottom: 56 }}>
+      <h1 style={{ margin: 0, fontSize: "clamp(34px,5vw,54px)", lineHeight: 1.04, letterSpacing: "-.03em", fontWeight: 600 }}>
+        Same payment. Same data. <span style={{ color: "#f08ab8" }}>Different answers.</span>
+      </h1>
+      <p style={{ margin: 0, fontSize: 18, color: MUTED1 }}>
+        Every card payment gets sent to one of several payment companies (<em style={{ fontStyle: "normal", color: TEXT }}>PSPs</em>). Today, hand-written rules choose which. We
+        tested whether an AI model, <strong style={{ fontWeight: 600 }}>Jev</strong>, could choose better. Here you can watch both decide, then change a number and see who flips.
       </p>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {psps.map((psp) => (
-          <div key={psp.id} className="rounded-lg border border-slate-800 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-medium text-slate-200">{psp.id}</span>
-              <label className="flex items-center gap-1 text-xs text-slate-400">
-                <input type="checkbox" checked={psp.enabled} onChange={(e) => setPsps(psps.map((p) => (p.id === psp.id ? { ...p, enabled: e.target.checked } : p)))} />
-                enabled
-              </label>
-            </div>
-            <div className="mb-2">
-              <div className="mb-1 text-xs text-slate-500">Supports currency</div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {CURRENCIES.map((c) => (
-                  <label key={c} className="flex items-center gap-1 text-xs text-slate-400">
-                    <input type="checkbox" checked={psp.supportedCurrencies.includes(c)} onChange={() => toggleSupportedCurrency(psp.id, c)} />
-                    {c}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div className="mb-3">
-              <div className="mb-1 text-xs text-slate-500">Supports method</div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {PAYMENT_METHODS.map((m) => (
-                  <label key={m} className="flex items-center gap-1 text-xs text-slate-400">
-                    <input type="checkbox" checked={psp.supportedPaymentMethods.includes(m)} onChange={() => toggleSupportedMethod(psp.id, m)} />
-                    {m}
-                  </label>
-                ))}
-              </div>
-            </div>
-            {(
-              [
-                ["acceptanceRate", "Acceptance rate", 0, 1, 0.001],
-                ["transactionCostPercent", "Cost %", 0, 10, 0.1],
-                ["fixedFee", "Fixed fee", 0, 10, 0.01],
-                ["chargebackRate", "Chargeback rate", 0, 1, 0.0001],
-                ["availabilityRate", "Availability", 0, 1, 0.001],
-                ["latencyMs", "Latency ms", 1, 5000, 1],
-                ["sampleSize", "Sample size", 0, 10000, 1],
-              ] as const
-            ).map(([field, label, min, max, step]) => (
-              <label key={field} className="mb-1.5 block text-xs text-slate-400">
-                {label}
-                <input
-                  type="number"
-                  min={min}
-                  max={max}
-                  step={step}
-                  value={psp[field]}
-                  onChange={(e) => updatePsp(psp.id, field, Number(e.target.value))}
-                  className="mt-0.5 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100"
-                />
-              </label>
-            ))}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
+        {[
+          ["01", "Pick a payment", "Or enter your own numbers."],
+          ["02", "Watch three routers choose", "Two rule books, one AI."],
+          ["03", "Nudge a slider", "See if the decision flips."],
+        ].map(([n, t, d]) => (
+          <div key={n} style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: INDIGO }}>{n}</div>
+            <div style={{ fontWeight: 600 }}>{t}</div>
+            <div style={{ color: MUTED2, fontSize: 14 }}>{d}</div>
           </div>
         ))}
       </div>
+      <details style={{ color: MUTED1, fontSize: 14.5 }}>
+        <summary style={{ cursor: "pointer", color: INDIGO_LT }}>New to payments? Three terms</summary>
+        <dl style={{ margin: "12px 0 0", display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 18px" }}>
+          <dt style={{ fontWeight: 600, color: TEXT }}>PSP</dt>
+          <dd style={{ margin: 0 }}>Payment service provider. The company that actually moves the money, e.g. a bank or processor. Each charges a fee and approves a different share of attempts.</dd>
+          <dt style={{ fontWeight: 600, color: TEXT }}>Router</dt>
+          <dd style={{ margin: 0 }}>The decision-maker that picks which PSP gets each payment.</dd>
+          <dt style={{ fontWeight: 600, color: TEXT }}>Acceptance rate</dt>
+          <dd style={{ margin: 0 }}>Out of 100 attempts, how many the PSP approves. A cheap PSP that declines a lot loses sales.</dd>
+        </dl>
+      </details>
+    </section>
+  );
+}
 
-      <button onClick={onSubmit} disabled={loading} className="mt-5 rounded-md bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-400 disabled:opacity-50">
-        {loading ? "Running…" : "Simulate"}
-      </button>
+function Step({ n, title, action, children }: { n: number; title: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 56 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: INDIGO, letterSpacing: ".06em" }}>STEP {n}</div>
+          <h2 style={{ margin: 0, fontSize: 26, letterSpacing: "-.02em", fontWeight: 600 }}>{title}</h2>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function PillButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ cursor: "pointer", font: "inherit", fontSize: 14, border: 0, borderRadius: 999, padding: "8px 16px", color: active ? INDIGO_DARK : MUTED1, background: active ? INDIGO : "transparent" }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function TextButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{ cursor: "pointer", font: "inherit", fontSize: 14, color: TEXT, background: "transparent", border: "1px solid rgba(255,255,255,.25)", borderRadius: 10, padding: "8px 14px" }}>
+      {children}
+    </button>
+  );
+}
+
+function PresetPicker({
+  scenarioId,
+  setScenarioId,
+  exampleType,
+  setExampleType,
+}: {
+  scenarioId: ScenarioId;
+  setScenarioId: (id: ScenarioId) => void;
+  exampleType: "disagreement" | "agreement";
+  setExampleType: (t: "disagreement" | "agreement") => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 10 }}>
+        {SCENARIO_IDS.map((id) => {
+          const active = scenarioId === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setScenarioId(id)}
+              style={{
+                textAlign: "left",
+                cursor: "pointer",
+                font: "inherit",
+                color: TEXT,
+                borderRadius: 12,
+                padding: "14px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                border: `1px solid ${active ? INDIGO : "rgba(255,255,255,.1)"}`,
+                background: active ? "rgba(154,160,255,.1)" : "transparent",
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>{SCENARIO_LABELS[id]}</span>
+              <span style={{ fontSize: 13.5, color: MUTED2 }}>{SCENARIO_DESCRIPTIONS[id]}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14, color: MUTED2 }}>
+        Worked example
+        {(["disagreement", "agreement"] as const).map((t, i) => {
+          const active = exampleType === t;
+          return (
+            <button
+              key={t}
+              onClick={() => setExampleType(t)}
+              style={{
+                cursor: "pointer",
+                font: "inherit",
+                fontSize: 14,
+                borderRadius: 8,
+                padding: "5px 14px",
+                color: TEXT,
+                border: `1px solid ${active ? INDIGO : "rgba(255,255,255,.15)"}`,
+                background: active ? "rgba(154,160,255,.12)" : "transparent",
+              }}
+            >
+              Example {i + 1}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
+}
+
+function fieldLabel(text: string, tag?: string, tagActive?: boolean) {
+  return (
+    <span style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", fontSize: 13.5 }}>
+      <span style={{ fontWeight: 600 }}>{text}</span>
+      {tag && <span style={{ fontSize: 11, borderRadius: 999, padding: "1px 8px", color: tagActive ? INDIGO_DARK : MUTED1, background: tagActive ? INDIGO_PALE : "rgba(255,255,255,.08)" }}>{tag}</span>}
+    </span>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  font: "inherit",
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: 14,
+  color: TEXT,
+  background: "#121211",
+  border: "1px solid rgba(255,255,255,.18)",
+  borderRadius: 8,
+  padding: "8px 10px",
+  width: "100%",
+  boxSizing: "border-box",
+};
+
+const selectStyle: React.CSSProperties = { ...inputStyle, fontFamily: "inherit" };
+
+function CustomForm({
+  transaction,
+  setTransaction,
+  psps,
+  setPsps,
+  toggleSupportedCurrency,
+  toggleSupportedMethod,
+  moreOpen,
+  setMoreOpen,
+  onReset,
+  eligibility,
+}: {
+  transaction: TransactionInput;
+  setTransaction: (t: TransactionInput) => void;
+  psps: PspInput[];
+  setPsps: (p: PspInput[]) => void;
+  toggleSupportedCurrency: (id: string, c: Currency) => void;
+  toggleSupportedMethod: (id: string, m: PaymentMethod) => void;
+  moreOpen: boolean;
+  setMoreOpen: (v: boolean) => void;
+  onReset: () => void;
+  eligibility: Array<{ pspId: string; eligible: boolean; reasons: string[] }>;
+}) {
+  function updatePsp(id: string, field: keyof PspInput, value: number) {
+    setPsps(psps.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+  }
+  const eu = transaction.currency === "EUR" && transaction.paymentMethod === "card" && (["DE", "NL", "FR"] as const).includes(transaction.country as "DE" | "NL" | "FR");
+  const amountHint = transaction.amount < 25 ? "Under 25: rules pick the lowest fixed fee." : transaction.amount >= 500 ? "500 or more: large-payment rules." : "25 to 499: small-payment rules.";
+
+  return (
+    <div style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 22, display: "flex", flexDirection: "column", gap: 24, background: CARD_BG }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontWeight: 600 }}>The transaction</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {fieldLabel("Amount", "Picks the rule", true)}
+            <input type="number" min={0.01} step={0.01} value={transaction.amount} onChange={(e) => setTransaction({ ...transaction, amount: Number(e.target.value) })} style={inputStyle} />
+            <span style={{ fontSize: 12, color: MUTED3 }}>{amountHint}</span>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {fieldLabel("Currency", "Filters PSPs", true)}
+            <select value={transaction.currency} onChange={(e) => setTransaction({ ...transaction, currency: e.target.value as TransactionInput["currency"] })} style={selectStyle}>
+              {(["EUR", "GBP", "USD"] as const).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: 12, color: MUTED3 }}>USD also triggers a named rule.</span>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {fieldLabel("Payment method", "Filters PSPs", true)}
+            <select value={transaction.paymentMethod} onChange={(e) => setTransaction({ ...transaction, paymentMethod: e.target.value as TransactionInput["paymentMethod"] })} style={selectStyle}>
+              {(["card", "paypal", "sepa_debit"] as const).map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: 12, color: MUTED3 }}>PSP C doesn&apos;t support PayPal.</span>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {fieldLabel("Country", eu ? "Active now" : "Conditional", eu)}
+            <select value={transaction.country} onChange={(e) => setTransaction({ ...transaction, country: e.target.value as TransactionInput["country"] })} style={selectStyle}>
+              {(["DE", "NL", "FR", "UK", "US"] as const).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: 12, color: MUTED3 }}>{eu ? "Triggers the EU-card rule." : "Only matters for EUR + card + DE, NL or FR."}</span>
+          </label>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontWeight: 600 }}>The three PSPs</div>
+        <div style={{ fontSize: 13.5, color: MUTED2, maxWidth: 700 }}>A PSP that doesn&apos;t support this payment&apos;s currency or method is removed before R1, R2 or Jev ever see it. Each PSP must keep at least one of each.</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))", gap: 14 }}>
+          {psps.map((psp) => {
+            const elig = eligibility.find((e) => e.pspId === psp.id);
+            const ok = elig?.eligible ?? true;
+            return (
+              <div key={psp.id} style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 14, opacity: ok ? 1 : 0.5 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <label style={{ fontWeight: 600, display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
+                    <input type="checkbox" checked={psp.enabled} onChange={(e) => setPsps(psps.map((p) => (p.id === psp.id ? { ...p, enabled: e.target.checked } : p)))} style={{ accentColor: INDIGO, width: 16, height: 16 }} />
+                    {DISPLAY_NAME[psp.id]}
+                  </label>
+                  <span style={{ fontSize: 12, color: ok ? GREEN : RED }}>{ok ? "Eligible" : (elig?.reasons ?? []).join(", ") || "Not eligible"}</span>
+                </div>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13.5, color: MUTED1 }}>
+                    <span>Acceptance rate</span>
+                    <span style={{ fontSize: 11, color: MUTED2 }}>Main signal</span>
+                  </span>
+                  <input type="number" step={0.001} value={psp.acceptanceRate} onChange={(e) => updatePsp(psp.id, "acceptanceRate", Number(e.target.value))} style={inputStyle} />
+                  <span style={{ fontSize: 12, color: MUTED3 }}>0 to 1. Share of attempts approved.</span>
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13.5, color: MUTED1 }}>
+                    <span>Cost %</span>
+                    <span style={{ fontSize: 11, color: MUTED2 }}>Fee</span>
+                  </span>
+                  <input type="number" step={0.1} value={psp.transactionCostPercent} onChange={(e) => updatePsp(psp.id, "transactionCostPercent", Number(e.target.value))} style={inputStyle} />
+                  <span style={{ fontSize: 12, color: MUTED3 }}>Variable fee, % of amount.</span>
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13.5, color: MUTED1 }}>
+                    <span>Fixed fee</span>
+                    <span style={{ fontSize: 11, color: MUTED2 }}>Fee</span>
+                  </span>
+                  <input type="number" step={0.01} value={psp.fixedFee} onChange={(e) => updatePsp(psp.id, "fixedFee", Number(e.target.value))} style={inputStyle} />
+                  <span style={{ fontSize: 12, color: MUTED3 }}>Added per payment.</span>
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13.5, color: MUTED1 }}>
+                    <span>Availability</span>
+                    <span style={{ fontSize: 11, color: MUTED2 }}>Safety check</span>
+                  </span>
+                  <input type="number" step={0.001} value={psp.availabilityRate} onChange={(e) => updatePsp(psp.id, "availabilityRate", Number(e.target.value))} style={inputStyle} />
+                  <span style={{ fontSize: 12, color: MUTED3 }}>Preferred PSP is skipped if below 0.99.</span>
+                </label>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px solid rgba(255,255,255,.08)", paddingTop: 12 }}>
+                  <span style={{ fontSize: 13.5, color: MUTED1 }}>Takes currencies</span>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {(["EUR", "GBP", "USD"] as const).map((c) => {
+                      const on = psp.supportedCurrencies.includes(c);
+                      const only = on && psp.supportedCurrencies.length === 1;
+                      return (
+                        <Chip key={c} on={on} only={only} onClick={() => toggleSupportedCurrency(psp.id, c)}>
+                          {c}
+                        </Chip>
+                      );
+                    })}
+                  </div>
+                  <span style={{ fontSize: 13.5, color: MUTED1, marginTop: 4 }}>Takes methods</span>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {(["card", "paypal", "sepa_debit"] as const).map((m) => {
+                      const on = psp.supportedPaymentMethods.includes(m);
+                      const only = on && psp.supportedPaymentMethods.length === 1;
+                      return (
+                        <Chip key={m} on={on} only={only} onClick={() => toggleSupportedMethod(psp.id, m)}>
+                          {m}
+                        </Chip>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <button onClick={() => setMoreOpen(!moreOpen)} style={{ cursor: "pointer", font: "inherit", fontSize: 14, color: INDIGO_LT, background: "transparent", border: 0, padding: 0 }}>
+          {(moreOpen ? "− Hide" : "+ Show") + " details that don't change the pick"}
+        </button>
+        <TextButton onClick={onReset}>Reset to defaults</TextButton>
+      </div>
+
+      {moreOpen && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 18, display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ fontSize: 13.5, color: MUTED1, maxWidth: 700 }}>
+            <strong style={{ fontWeight: 600, color: TEXT }}>These don&apos;t change any pick in live mode.</strong> The rules never read them, and the numbers sent to Jev stay the same whatever you choose. They&apos;re
+            here for realism and show up in the raw request.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16 }}>
+            {transaction.paymentMethod === "card" && (
+              <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {fieldLabel("Card scheme", "No effect")}
+                <select value={transaction.cardScheme ?? "visa"} onChange={(e) => setTransaction({ ...transaction, cardScheme: e.target.value as TransactionInput["cardScheme"] })} style={selectStyle}>
+                  {(["visa", "mastercard", "amex"] as const).map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: 12, color: MUTED3 }}>Sent to Jev as context only.</span>
+              </label>
+            )}
+            <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {fieldLabel("Device", "No effect")}
+              <select value={transaction.device} onChange={(e) => setTransaction({ ...transaction, device: e.target.value as TransactionInput["device"] })} style={selectStyle}>
+                {(["desktop", "mobile"] as const).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {fieldLabel("Customer type", "No effect")}
+              <select value={transaction.customerType} onChange={(e) => setTransaction({ ...transaction, customerType: e.target.value as TransactionInput["customerType"] })} style={selectStyle}>
+                {(["new", "returning"] as const).map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <span style={{ fontSize: 12, color: MUTED3 }}>Text only. Numbers sent to Jev stay identical.</span>
+            </label>
+            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, cursor: "pointer" }}>
+              <input type="checkbox" checked={transaction.threeDsEligible} onChange={(e) => setTransaction({ ...transaction, threeDsEligible: e.target.checked })} style={{ accentColor: INDIGO, width: 16, height: 16 }} />
+              3DS eligible
+            </label>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))", gap: 14 }}>
+            {psps.map((psp) => (
+              <div key={psp.id} style={{ border: "1px solid rgba(255,255,255,.08)", borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{DISPLAY_NAME[psp.id]}</div>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 13.5, color: MUTED1 }}>Chargeback rate</span>
+                  <input type="number" step={0.0001} value={psp.chargebackRate} onChange={(e) => updatePsp(psp.id, "chargebackRate", Number(e.target.value))} style={inputStyle} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 13.5, color: MUTED1 }}>Latency (ms)</span>
+                  <input type="number" step={1} value={psp.latencyMs} onChange={(e) => updatePsp(psp.id, "latencyMs", Number(e.target.value))} style={inputStyle} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 13.5, color: MUTED1 }}>Sample size</span>
+                  <input type="number" step={1} value={psp.sampleSize} onChange={(e) => updatePsp(psp.id, "sampleSize", Number(e.target.value))} style={inputStyle} />
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ fontSize: 13.5, color: MUTED2 }}>The rule routers react instantly. Jev is a live model call, so you ask it when you&apos;re ready.</div>
+    </div>
+  );
+}
+
+function Chip({ on, only, onClick, children }: { on: boolean; only: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={only}
+      title={only ? "Each PSP needs at least one" : ""}
+      style={{
+        font: "inherit",
+        fontSize: 12.5,
+        borderRadius: 999,
+        padding: "3px 11px",
+        color: on ? INDIGO_DARK : MUTED1,
+        background: on ? INDIGO_PALE : "transparent",
+        border: `1px solid ${on ? INDIGO_PALE : "rgba(255,255,255,.2)"}`,
+        opacity: only ? 0.6 : 1,
+        cursor: only ? "not-allowed" : "pointer",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SingleEligibleView({ eligible, amountEUR }: { eligible: PspConfig; amountEUR: number }) {
+  const outcome = useMemo(() => simulateOnceFromInput(eligible, amountEUR), [eligible, amountEUR]);
+  return (
+    <div style={{ marginBottom: 56 }}>
+      <p style={{ color: MUTED1, marginBottom: 12 }}>Only one PSP is eligible — routed deterministically, Jev skipped.</p>
+      <div style={{ border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, padding: 16, display: "inline-block" }}>
+        <div style={{ fontSize: 12, color: MUTED2, textTransform: "uppercase" }}>Route</div>
+        <div style={{ fontSize: 20, fontWeight: 600 }}>{DISPLAY_NAME[eligible.id]}</div>
+      </div>
+      <div style={{ marginTop: 12, fontSize: 14 }}>
+        <span style={{ color: outcome.authorized ? GREEN : RED }}>{outcome.authorized ? "Authorized" : "Declined"}</span>
+        <span style={{ color: MUTED1 }}> · €{outcome.netCostEUR.toFixed(4)} net cost</span>
+      </div>
+    </div>
+  );
+}
+
+function VerdictBanner({ v }: { v: VerdictModel }) {
+  return (
+    <div style={{ borderRadius: 18, padding: "26px 28px", display: "flex", flexDirection: "column", gap: 10, border: `1px solid ${v.border}`, background: v.bg }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: ".06em", color: v.color }}>{v.eyebrow}</div>
+      <div style={{ fontSize: "clamp(22px,3.4vw,34px)", fontWeight: 600, letterSpacing: "-.02em", lineHeight: 1.15 }}>{v.title}</div>
+      <div style={{ color: MUTED1, maxWidth: 680 }}>{v.body}</div>
+    </div>
+  );
+}
+
+function RawEvidence({
+  open,
+  setOpen,
+  tab,
+  setTab,
+  copied,
+  setCopied,
+  mode,
+  preset,
+  jevResult,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  tab: number;
+  setTab: (n: number) => void;
+  copied: boolean;
+  setCopied: (v: boolean) => void;
+  mode: "preset" | "custom";
+  preset: PresetExample | null;
+  jevResult: JevOnlyResult | null;
+}) {
+  const available = mode === "preset" ? preset !== null : jevResult !== null && jevResult.status === "ok" && jevResult.jev.status === "ok";
+  if (!available) {
+    return (
+      <section style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 28, fontSize: 14, color: MUTED2 }}>
+        Under the hood: ask Jev at least once to see the raw request, response and schema.
+      </section>
+    );
+  }
+
+  const tabs = ["Request", "Response", "Schema"];
+  let note = "";
+  let data: unknown = null;
+  if (mode === "preset" && preset) {
+    const payload = [
+      { n: "The exact data sent to the model.", o: preset.request },
+      { n: "Recorded during the original experiment and replayed here.", o: preset.rawResponse },
+      { n: "The shape Jev must answer in.", o: preset.schema },
+    ][tab]!;
+    note = payload.n;
+    data = payload.o;
+  } else if (jevResult && jevResult.status === "ok" && jevResult.jev.status === "ok") {
+    const jev = jevResult.jev;
+    const payload = [
+      { n: "The exact data sent to the model.", o: jev.request },
+      { n: "Returned by the live model for your last request.", o: jev.rawResponse },
+      { n: "The shape Jev must answer in.", o: jev.schema },
+    ][tab]!;
+    note = payload.n;
+    data = payload.o;
+  }
+  const rawText = JSON.stringify(data, null, 2);
+
+  return (
+    <section style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
+      <button onClick={() => setOpen(!open)} style={{ alignSelf: "flex-start", cursor: "pointer", font: "inherit", fontSize: 15, fontWeight: 600, color: TEXT, background: "transparent", border: 0, padding: 0, display: "flex", gap: 10, alignItems: "center" }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", color: INDIGO }}>{open ? "−" : "+"}</span>
+        Under the hood: the raw evidence
+      </button>
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {tabs.map((label, i) => (
+              <button
+                key={label}
+                onClick={() => setTab(i)}
+                style={{ cursor: "pointer", font: "inherit", fontSize: 13.5, borderRadius: 8, padding: "6px 12px", color: TEXT, border: "1px solid rgba(255,255,255,.15)", background: tab === i ? "#2f3150" : "transparent" }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 13.5, color: MUTED2 }}>{note}</div>
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(rawText);
+                } catch {
+                  // ignore
+                }
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1200);
+              }}
+              style={{ position: "absolute", top: 10, right: 10, cursor: "pointer", font: "inherit", fontSize: 12.5, color: TEXT, background: "#2a2a28", border: "1px solid rgba(255,255,255,.15)", borderRadius: 6, padding: "4px 10px" }}
+            >
+              {copied ? "Copied" : "Copy"}
+            </button>
+            <pre style={{ margin: 0, background: "#0f0f0e", border: "1px solid rgba(255,255,255,.08)", borderRadius: 12, padding: 18, overflow: "auto", maxHeight: 340, fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5, lineHeight: 1.6, color: "#cfd0c8" }}>
+              {rawText}
+            </pre>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ---------- render-model assembly shared by preset and custom modes ----------
+
+type JevState =
+  | { kind: "unasked" }
+  | { kind: "failed" }
+  | { kind: "invalid"; reason: string }
+  | { kind: "ok"; choice: PspId; probabilities: Record<string, number>; confidence: number; stale: boolean; tag: string; tagBg: string; tagFg: string };
+
+interface Model {
+  amountText: string;
+  inputRows: { name: string; val: string }[];
+  routers: RouterCardModel[];
+  verdict: VerdictModel;
+  r1Book: RuleBookModel;
+  r2Book: RuleBookModel;
+  probs: { name: string; text: string; width: string; top: boolean }[];
+  confText: string | null;
+  outcomes: OutcomeModel[];
+}
+
+function buildInputRows(eligiblePspIds: PspId[], observed: Partial<Record<PspId, ObservedPspStats>>, tx: RouterInput["tx"]): { name: string; val: string }[] {
+  const rows: { name: string; val: string }[] = [
+    { name: "Currency", val: tx.currency },
+    { name: "Method", val: tx.paymentMethod },
+    { name: "Country", val: tx.country },
+  ];
+  for (const id of PSP_IDS) {
+    if (!eligiblePspIds.includes(id)) continue;
+    const stats = observed[id];
+    if (stats?.acceptanceOverall.value != null) {
+      rows.push({ name: `${DISPLAY_NAME[id]} approves`, val: pct(stats.acceptanceOverall.value) });
+    }
+  }
+  return rows;
+}
+
+function buildOutcomesFromPreset(preset: PresetExample): OutcomeModel[] {
+  const picks: Record<string, string[]> = {};
+  const add = (label: string, id: string) => {
+    (picks[id] ??= []).push(label);
+  };
+  add("R1", preset.r1Choice);
+  add("R2", preset.r2Choice);
+  add("Jev", preset.jevChoice);
+  return Object.entries(picks).map(([id, who]) => {
+    const o = preset.outcomesByPsp[id];
+    const ok = o?.authorized ?? false;
+    return {
+      who: who.join(" + "),
+      psp: DISPLAY_NAME[id as PspId] ?? id,
+      status: ok ? "Approved" : "Declined",
+      color: ok ? GREEN : RED,
+      cost: ok ? `Sale kept. Net cost €${(o?.netCostEUR ?? 0).toFixed(4)}.` : "Sale lost.",
+    };
+  });
+}
+
+function buildOutcomesFromLive(
+  r1Choice: PspId,
+  r2Choice: PspId,
+  jevState: JevState,
+  live: { eligible: PspConfig[]; tx: { amountEUR: number } }
+): OutcomeModel[] {
+  const picks: Record<string, string[]> = {};
+  const add = (label: string, id: PspId) => {
+    (picks[id] ??= []).push(label);
+  };
+  add("R1", r1Choice);
+  add("R2", r2Choice);
+  if (jevState.kind === "ok") add("Jev", jevState.choice);
+
+  return Object.entries(picks).map(([id, who]) => {
+    const psp = live.eligible.find((p) => p.id === id)!;
+    const outcome = simulateOnceFromInput(psp, live.tx.amountEUR);
+    return {
+      who: who.join(" + "),
+      psp: DISPLAY_NAME[id as PspId] ?? id,
+      status: outcome.authorized ? "Approved" : "Declined",
+      color: outcome.authorized ? GREEN : RED,
+      cost: outcome.authorized ? `Sale kept. Net cost €${outcome.netCostEUR.toFixed(4)}.` : "Sale lost.",
+    };
+  });
+}
+
+function buildModel(args: {
+  eligiblePspIds: PspId[];
+  r1Choice: PspId;
+  r2Choice: PspId;
+  r1Book: RuleBookModel;
+  r2Book: RuleBookModel;
+  jevState: JevState;
+  amountText: string;
+  inputRows: { name: string; val: string }[];
+  outcomes: OutcomeModel[];
+}): Model {
+  const { r1Choice, r2Choice, jevState } = args;
+
+  const jevPick = jevState.kind === "ok" ? DISPLAY_NAME[jevState.choice] : jevState.kind === "unasked" ? "Not asked yet" : jevState.kind === "failed" ? "Unreachable" : "Invalid choice";
+  const jevWhy =
+    jevState.kind === "ok"
+      ? jevState.stale
+        ? "Based on your earlier numbers. Ask again."
+        : `Confidence ${pct(jevState.confidence)}`
+      : jevState.kind === "unasked"
+        ? "Press the button to call the live model."
+        : "No routing decision was made.";
+
+  const routers: RouterCardModel[] = [
+    {
+      id: "R1",
+      kindLabel: "Rules",
+      how: "Hand-written rule book, first match wins.",
+      pickLabel: DISPLAY_NAME[r1Choice],
+      why: args.r1Book.rows.find((r) => r.fired && r.n <= 5)?.text ?? "",
+      color: "#d9d6cc",
+      tagLabel: "Local rule",
+      tagFg: TEXT,
+      tagBg: "rgba(255,255,255,.1)",
+      isJev: false,
+      dim: false,
+    },
+    {
+      id: "R2",
+      kindLabel: "Rules",
+      how: "A second rule book with different priorities.",
+      pickLabel: DISPLAY_NAME[r2Choice],
+      why: args.r2Book.rows.find((r) => r.fired && r.n <= 5)?.text ?? "",
+      color: "#d9d6cc",
+      tagLabel: "Local rule",
+      tagFg: TEXT,
+      tagBg: "rgba(255,255,255,.1)",
+      isJev: false,
+      dim: false,
+    },
+    {
+      id: "Jev",
+      kindLabel: "AI model",
+      how: "Reads the same data and weighs trade-offs it learned from examples.",
+      pickLabel: jevPick,
+      why: jevWhy,
+      color: INDIGO,
+      tagLabel: jevState.kind === "ok" ? jevState.tag : jevState.kind === "unasked" ? "Not asked yet" : "Error",
+      tagFg: jevState.kind === "ok" ? jevState.tagFg : INDIGO_DARK,
+      tagBg: jevState.kind === "ok" ? jevState.tagBg : "rgba(255,255,255,.1)",
+      isJev: true,
+      dim: jevState.kind === "ok" && jevState.stale,
+    },
+  ];
+
+  let verdict: VerdictModel;
+  if (jevState.kind === "unasked") {
+    verdict = {
+      eyebrow: "WAITING ON JEV",
+      title: "The rules have answered. Ask Jev to see if it agrees.",
+      body: "R1 and R2 are formulas that run instantly. Jev is a real model call.",
+      color: INDIGO,
+      border: "rgba(154,160,255,.3)",
+      bg: "rgba(154,160,255,.05)",
+    };
+  } else if (jevState.kind !== "ok") {
+    verdict = {
+      eyebrow: "JEV UNAVAILABLE",
+      title: "Jev couldn't answer this time.",
+      body: "R1 and R2 still routed this payment; try asking Jev again.",
+      color: RED,
+      border: "oklch(0.72 0.15 25 / .5)",
+      bg: "oklch(0.72 0.15 25 / .07)",
+    };
+  } else {
+    const jp = jevState.choice;
+    if (jp === r1Choice && jp === r2Choice) {
+      verdict = {
+        eyebrow: "ALL THREE AGREE",
+        title: `Everyone picked ${DISPLAY_NAME[jp]}.`,
+        body: `Nothing to argue about here. Change the amount, currency or ${DISPLAY_NAME[jp]}'s approval rate and ask Jev again.`,
+        color: GREEN,
+        border: "rgba(255,255,255,.12)",
+        bg: CARD_BG,
+      };
+    } else {
+      const title = jp === r2Choice ? "Jev sides with R2 against R1" : jp === r1Choice ? "Jev sides with R1 against R2" : r1Choice === r2Choice ? "Both rule books agree. Jev doesn't" : "Jev disagrees with both rule books";
+      const otherChoice = jp === r2Choice ? r1Choice : r2Choice;
+      verdict = {
+        eyebrow: "THEY DISAGREE",
+        title: `${title}: ${DISPLAY_NAME[jp]} vs ${DISPLAY_NAME[otherChoice]}.`,
+        body: `${jevState.stale ? "(Jev's answer is from your previous numbers.) " : ""}Nudge a number and watch who flips.`,
+        color: PINK,
+        border: "oklch(0.76 0.15 350 / .5)",
+        bg: "oklch(0.76 0.15 350 / .08)",
+      };
+    }
+  }
+
+  const probEntries = jevState.kind === "ok" ? Object.entries(jevState.probabilities) : [];
+  const topId = jevState.kind === "ok" ? jevState.choice : null;
+  const probs = probEntries.map(([id, p]) => ({
+    name: DISPLAY_NAME[id as PspId] ?? id,
+    text: pct(p),
+    width: `${Math.max(2, Math.round(p * 100))}%`,
+    top: id === topId,
+  }));
+
+  return {
+    amountText: args.amountText,
+    inputRows: args.inputRows,
+    routers,
+    verdict,
+    r1Book: args.r1Book,
+    r2Book: args.r2Book,
+    probs,
+    confText: jevState.kind === "ok" ? pct(jevState.confidence) : null,
+    outcomes: args.outcomes,
+  };
 }

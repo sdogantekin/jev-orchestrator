@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { runCustomDecision } from "../../../lib/playground/customDecision";
+import { runJevDecision } from "../../../lib/playground/customDecision";
 import { DecisionRequestSchema } from "../../../lib/playground/schema";
 import { checkAndIncrementGlobalDailyCap, checkVisitorRateLimit } from "../../../lib/rateLimit";
 
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: ERROR_MESSAGES.invalid_body, details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const result = await runCustomDecision({
+  const result = await runJevDecision({
     transactionInput: parsed.data.transaction,
     pspInputs: parsed.data.psps,
     apiKey,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PspConfig } from "../domain/psp.js";
 import type { PspId, Transaction } from "../domain/types.js";
 import type { ObservedPspStats } from "../simulation/observedView.js";
-import { createRuleRouter, DEFAULT_RULE_PARAMS, type RuleParams } from "./ruleRouter.js";
+import { createRuleRouter, DEFAULT_RULE_PARAMS, runRuleRouterTraced, type RuleParams } from "./ruleRouter.js";
 import type { RouterInput } from "./types.js";
 
 function psp(id: PspId, overrides: Partial<PspConfig> = {}): PspConfig {
@@ -167,6 +167,49 @@ describe("ties break by observed chargeback rate, lower is better", () => {
       gamma: stats({ pspId: "gamma", acceptanceOverall: { value: 0.7, sampleSize: 100 } }),
     };
     expect(run({ tx: tx({ currency: "GBP", country: "UK", amount: 600 }), observed })).toBe("alpha");
+  });
+});
+
+describe("runRuleRouterTraced matches createRuleRouter's choice and marks the real fired rule", () => {
+  it("marks rule 1 fired and nothing else, for the EU-card case", () => {
+    const { choice, trace } = runRuleRouterTraced(DEFAULT_RULE_PARAMS, { tx: tx({ currency: "EUR", paymentMethod: "card", country: "DE" }), eligible: allThree, observed: safeObserved });
+    expect(choice).toBe("beta");
+    expect(trace.find((r) => r.n === 1)?.fired).toBe(true);
+    expect(trace.filter((r) => r.fired)).toEqual([{ n: 1, fired: true }]);
+  });
+
+  it("marks rule 6 (ineligible fallback) and not rule 7, matching real short-circuit order", () => {
+    const eligible = [psp("alpha"), psp("gamma")];
+    const observed: Partial<Record<PspId, ObservedPspStats>> = {
+      alpha: stats({ pspId: "alpha", acceptanceOverall: { value: 0.8, sampleSize: 100 } }),
+      gamma: stats({ pspId: "gamma", acceptanceOverall: { value: 0.9, sampleSize: 100 } }),
+    };
+    const { choice, trace } = runRuleRouterTraced(DEFAULT_RULE_PARAMS, {
+      tx: tx({ currency: "EUR", paymentMethod: "card", country: "DE" }),
+      eligible,
+      observed,
+    });
+    expect(choice).toBe("gamma");
+    expect(trace.find((r) => r.n === 6)?.fired).toBe(true);
+    expect(trace.find((r) => r.n === 7)?.fired).toBe(false);
+  });
+
+  it("marks rule 8 fired only on a genuine tie", () => {
+    const tied: Partial<Record<PspId, ObservedPspStats>> = {
+      alpha: stats({ pspId: "alpha", acceptanceOverall: { value: 0.9, sampleSize: 100 } }),
+      beta: stats({ pspId: "beta", acceptanceOverall: { value: 0.9, sampleSize: 100 } }),
+      gamma: stats({ pspId: "gamma", acceptanceOverall: { value: 0.7, sampleSize: 100 } }),
+    };
+    const result = runRuleRouterTraced(DEFAULT_RULE_PARAMS, { tx: tx({ currency: "GBP", country: "UK", amount: 600 }), eligible: allThree, observed: tied });
+    expect(result.trace.find((r) => r.n === 8)?.fired).toBe(true);
+
+    const notTied: Partial<Record<PspId, ObservedPspStats>> = {
+      alpha: stats({ pspId: "alpha", acceptanceOverall: { value: 0.8, sampleSize: 100 } }),
+      beta: stats({ pspId: "beta", acceptanceOverall: { value: 0.9, sampleSize: 100 } }),
+      gamma: stats({ pspId: "gamma", acceptanceOverall: { value: 0.7, sampleSize: 100 } }),
+    };
+    const result2 = runRuleRouterTraced(DEFAULT_RULE_PARAMS, { tx: tx({ currency: "GBP", country: "UK", amount: 600 }), eligible: allThree, observed: notTied });
+    expect(result2.trace.find((r) => r.n === 8)?.fired).toBe(false);
   });
 });
 

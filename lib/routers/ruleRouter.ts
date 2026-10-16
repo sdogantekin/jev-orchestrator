@@ -32,6 +32,18 @@ export const DEFAULT_RULE_PARAMS: RuleParams = {
   safetyAcceptanceThreshold: 0.88,
 };
 
+/** One row of {@link describeRuleParams}'s 8-item list, with whether it actually fired for a given decision. */
+export interface RuleTraceRow {
+  n: number;
+  fired: boolean;
+}
+
+export interface TracedChoice {
+  choice: PspId;
+  /** Always 8 rows, n 1-8, same order and meaning as describeRuleParams()'s list. */
+  trace: RuleTraceRow[];
+}
+
 function observedAcceptance(stats: ObservedPspStats | undefined): number {
   // No data yet counts as the worst possible candidate, never as a reason to prefer a PSP.
   return stats?.acceptanceOverall.value ?? -Infinity;
@@ -57,64 +69,73 @@ function breakTieByChargeback(tied: PspConfig[], observed: Partial<Record<PspId,
 }
 
 /** Highest observed overall acceptance among the eligible set; an exact tie breaks by observed chargeback rate, lower is better. */
-function highestAcceptanceEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): PspId {
+function highestAcceptanceEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): { id: PspId; tieBroken: boolean } {
   let bestScore = -Infinity;
   for (const psp of eligible) {
     const score = observedAcceptance(observed[psp.id]);
     if (score > bestScore) bestScore = score;
   }
   const tied = eligible.filter((psp) => observedAcceptance(observed[psp.id]) === bestScore);
-  return tied.length === 1 ? tied[0]!.id : breakTieByChargeback(tied, observed);
+  return tied.length === 1 ? { id: tied[0]!.id, tieBroken: false } : { id: breakTieByChargeback(tied, observed), tieBroken: true };
 }
 
 /** Lowest fixed fee among the eligible set; an exact tie breaks by observed chargeback rate, lower is better. */
-function lowestFixedFeeEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): PspId {
+function lowestFixedFeeEligible(eligible: PspConfig[], observed: Partial<Record<PspId, ObservedPspStats>>): { id: PspId; tieBroken: boolean } {
   let bestFee = Infinity;
   for (const psp of eligible) {
     if (psp.fixedFee < bestFee) bestFee = psp.fixedFee;
   }
   const tied = eligible.filter((psp) => psp.fixedFee === bestFee);
-  return tied.length === 1 ? tied[0]!.id : breakTieByChargeback(tied, observed);
+  return tied.length === 1 ? { id: tied[0]!.id, tieBroken: false } : { id: breakTieByChargeback(tied, observed), tieBroken: true };
 }
 
-/** Rules 2 through 6 (section 6.1): first match wins, yields a candidate PSP id that may or may not be eligible. */
-function candidateFromOrderedRules(input: RouterInput, params: RuleParams): PspId {
+/** UI rules 1-5 (describeRuleParams numbering): first match wins. */
+function candidateFromOrderedRules(input: RouterInput, params: RuleParams): { id: PspId; ruleN: number; tieBroken: boolean } {
   const { tx, eligible, observed } = input;
 
   if (tx.currency === "EUR" && tx.paymentMethod === "card" && (["DE", "NL", "FR"] as const).includes(tx.country as "DE" | "NL" | "FR")) {
-    return params.preferredForEuCard; // rule 2
+    return { id: params.preferredForEuCard, ruleN: 1, tieBroken: false };
   }
   if (tx.currency === "USD") {
-    return params.preferredForUsd; // rule 3
+    return { id: params.preferredForUsd, ruleN: 2, tieBroken: false };
   }
   if (tx.amount >= params.largeThreshold) {
-    return highestAcceptanceEligible(eligible, observed); // rule 4
+    const r = highestAcceptanceEligible(eligible, observed);
+    return { id: r.id, ruleN: 3, tieBroken: r.tieBroken };
   }
   if (tx.amount < params.smallThreshold) {
-    return lowestFixedFeeEligible(eligible, observed); // rule 5
+    const r = lowestFixedFeeEligible(eligible, observed);
+    return { id: r.id, ruleN: 4, tieBroken: r.tieBroken };
   }
-  return params.preferredDefault; // rule 6
+  return { id: params.preferredDefault, ruleN: 5, tieBroken: false };
 }
 
 /**
- * Builds an R1/R2-shaped router from a set of parameters. Rule 8 (preferred PSP not eligible)
- * and rule 7 (safety fallback on the preferred PSP's observed availability/acceptance) are
- * applied in that logical order: rule 7 can only inspect observed stats for a PSP the router
- * was actually given data for, so an ineligible preferred PSP must be replaced (rule 8) before
- * the safety check (rule 7) has anything to inspect.
+ * The single evaluation path both createRuleRouter and runRuleRouterTraced run through, so the
+ * traced UI view can never drift from what the router actually does. UI rule 6 (preferred PSP
+ * not eligible) and rule 7 (safety fallback on the preferred PSP's observed availability/
+ * acceptance) are applied in that order: rule 7 can only inspect observed stats for a PSP the
+ * router was actually given data for, so an ineligible preferred PSP must be replaced (rule 6)
+ * before the safety check (rule 7) has anything to inspect — meaning rule 7 never actually runs
+ * when rule 6 already fired.
  */
-export function createRuleRouter(params: RuleParams): RouterFn {
-  return (input) => {
-    const { eligible, observed } = input;
-    const eligibleIds = new Set(eligible.map((p) => p.id));
+function evaluateTraced(params: RuleParams, input: RouterInput): TracedChoice {
+  const { eligible, observed } = input;
+  const eligibleIds = new Set(eligible.map((p) => p.id));
 
-    const preferred = candidateFromOrderedRules(input, params);
+  const primary = candidateFromOrderedRules(input, params);
+  let choice = primary.id;
+  let usedIneligibleFallback = false;
+  let usedSafetyFallback = false;
+  let fallbackTieBroken = false;
 
-    if (!eligibleIds.has(preferred)) {
-      return highestAcceptanceEligible(eligible, observed); // rule 8
-    }
-
-    const stats = observed[preferred];
+  if (!eligibleIds.has(choice)) {
+    usedIneligibleFallback = true;
+    const r = highestAcceptanceEligible(eligible, observed);
+    choice = r.id;
+    fallbackTieBroken = r.tieBroken;
+  } else {
+    const stats = observed[choice];
     const availability = stats?.availabilityOverall.value;
     const acceptance = stats?.acceptanceOverall.value;
     const unsafe =
@@ -126,11 +147,28 @@ export function createRuleRouter(params: RuleParams): RouterFn {
       acceptance < params.safetyAcceptanceThreshold;
 
     if (unsafe) {
-      return highestAcceptanceEligible(eligible, observed); // rule 7
+      usedSafetyFallback = true;
+      const r = highestAcceptanceEligible(eligible, observed);
+      choice = r.id;
+      fallbackTieBroken = r.tieBroken;
     }
+  }
 
-    return preferred;
-  };
+  const trace: RuleTraceRow[] = [1, 2, 3, 4, 5].map((n) => ({ n, fired: n === primary.ruleN }));
+  trace.push({ n: 6, fired: usedIneligibleFallback });
+  trace.push({ n: 7, fired: usedSafetyFallback });
+  trace.push({ n: 8, fired: primary.tieBroken || fallbackTieBroken });
+
+  return { choice, trace };
+}
+
+export function createRuleRouter(params: RuleParams): RouterFn {
+  return (input) => evaluateTraced(params, input).choice;
+}
+
+/** Same evaluation as createRuleRouter's router, plus which of describeRuleParams()'s 8 rules fired — for the Playground's live rule-book view. */
+export function runRuleRouterTraced(params: RuleParams, input: RouterInput): TracedChoice {
+  return evaluateTraced(params, input);
 }
 
 export const r1Router: RouterFn = createRuleRouter(DEFAULT_RULE_PARAMS);
