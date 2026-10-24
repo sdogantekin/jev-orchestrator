@@ -1,0 +1,177 @@
+{
+  "scenarioId": "eligibility_mix",
+  "highVolume": {
+    "perTransaction": 20
+  },
+  "tunedR2Params": {
+    "preferredForEuCard": "beta",
+    "preferredForUsd": "alpha",
+    "preferredDefault": "alpha",
+    "largeThreshold": 400,
+    "smallThreshold": 20,
+    "safetyAvailabilityThreshold": 0.98,
+    "safetyAcceptanceThreshold": 0.85
+  },
+  "expectedAuth": {
+    "jev": {
+      "mean": 0.9439627660714296,
+      "lo": 0.9437284200000038,
+      "hi": 0.9442051225000047,
+      "n": 14000
+    },
+    "oracle": {
+      "mean": 0.9486531339285696,
+      "lo": 0.9484465596428546,
+      "hi": 0.9488676767857153,
+      "n": 14000
+    },
+    "R0": {
+      "mean": 0.9425864682142346,
+      "lo": 0.9424930435713783,
+      "hi": 0.9426848853570909,
+      "n": 14000
+    },
+    "R1": {
+      "mean": 0.9439436225000185,
+      "lo": 0.9436387396428767,
+      "hi": 0.9442679667857342,
+      "n": 14000
+    },
+    "R2": {
+      "mean": 0.9457588600000121,
+      "lo": 0.9454812117857292,
+      "hi": 0.946039723928584,
+      "n": 14000
+    },
+    "statsReference": {
+      "mean": 0.9443482560714188,
+      "lo": 0.9441226599999949,
+      "hi": 0.9445673160714229,
+      "n": 14000
+    },
+    "jevV1": {
+      "mean": 0.9334138978571686,
+      "lo": 0.933057328928599,
+      "hi": 0.9337658975000253,
+      "n": 14000
+    }
+  },
+  "jevMinus": {
+    "R0": {
+      "mean": 0.0013762978571429073,
+      "lo": 0.0011665646428571986,
+      "hi": 0.0015916496428572046,
+      "n": 14000
+    },
+    "R1": {
+      "mean": 0.00001914357142856244,
+      "lo": -0.00022453321428572552,
+      "hi": 0.0002567303571428452,
+      "n": 14000
+    },
+    "R2": {
+      "mean": -0.0017960939285714612,
+      "lo": -0.002002459642857184,
+      "hi": -0.0015808246428571638,
+      "n": 14000
+    },
+    "statsReference": {
+      "mean": -0.0003854899999999954,
+      "lo": -0.0005123835714285666,
+      "hi": -0.0002598424999999945,
+      "n": 14000
+    },
+    "jevV1": {
+      "mean": 0.010548868214285648,
+      "lo": 0.01017151857142852,
+      "hi": 0.01094886464285709,
+      "n": 14000
+    }
+  },
+  "headroomCaptured": 0.2268623197653498,
+  "jevV1Fallbacks": 0,
+  "realized": {
+    "n": 14000,
+    "jevAuthorizationRate": {
+      "mean": 0.9410714285714286,
+      "lo": 0.9372857142857143,
+      "hi": 0.9450714285714286,
+      "n": 14000
+    },
+    "r2AuthorizationRate": {
+      "mean": 0.9425,
+      "lo": 0.9386428571428571,
+      "hi": 0.9461428571428572,
+      "n": 14000
+    },
+    "jevNetCostPerAuthorized": {
+      "mean": 2.095999926113702,
+      "lo": 1.9293518897590112,
+      "hi": 2.3015393124978405,
+      "n": 13175
+    },
+    "r2NetCostPerAuthorized": {
+      "mean": 1.980163405604347,
+      "lo": 1.890771031301179,
+      "hi": 2.0857508941672807,
+      "n": 13195
+    },
+    "jevAverageCallLatencyMs": 198.94542857142858,
+    "jevWorstCallLatencyMs": 2560,
+    "jevAverageCostPerLiveCall": 0.00006424929900000028,
+    "jevLiveCallCount": 14000,
+    "jevOkCount": 14000,
+    "jevInvalidCount": 0,
+    "jevFailedCount": 0,
+    "jevFallbackRate": 0,
+    "disagreementRate": 0.25821428571428573,
+    "disagreementCount": 3615,
+    "onDisagreement": {
+      "jevWins": 1504,
+      "r2Wins": 2099,
+      "ties": 12
+    },
+    "confidenceHistogram": [
+      {
+        "bucketStart": 0,
+        "count": 156
+      },
+      {
+        "bucketStart": 0.1,
+        "count": 209
+      },
+      {
+        "bucketStart": 0.2,
+        "count": 486
+      },
+      {
+        "bucketStart": 0.3,
+        "count": 839
+      },
+      {
+        "bucketStart": 0.4,
+        "count": 906
+      },
+      {
+        "bucketStart": 0.5,
+        "count": 1124
+      },
+      {
+        "bucketStart": 0.6,
+        "count": 1290
+      },
+      {
+        "bucketStart": 0.7,
+        "count": 2013
+      },
+      {
+        "bucketStart": 0.8,
+        "count": 3431
+      },
+      {
+        "bucketStart": 0.9,
+        "count": 3546
+      }
+    ]
+  }
+}

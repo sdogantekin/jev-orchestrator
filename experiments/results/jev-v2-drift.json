@@ -1,0 +1,177 @@
+{
+  "scenarioId": "drift",
+  "highVolume": {
+    "perTransaction": 20
+  },
+  "tunedR2Params": {
+    "preferredForEuCard": "beta",
+    "preferredForUsd": "alpha",
+    "preferredDefault": "alpha",
+    "largeThreshold": 400,
+    "smallThreshold": 20,
+    "safetyAvailabilityThreshold": 0.98,
+    "safetyAcceptanceThreshold": 0.85
+  },
+  "expectedAuth": {
+    "jev": {
+      "mean": 0.9405858914285622,
+      "lo": 0.9402748332142783,
+      "hi": 0.9408640696428447,
+      "n": 14000
+    },
+    "oracle": {
+      "mean": 0.9460673339285478,
+      "lo": 0.9458950503571225,
+      "hi": 0.9462344974999801,
+      "n": 14000
+    },
+    "R0": {
+      "mean": 0.9409323707142273,
+      "lo": 0.9406565303570847,
+      "hi": 0.9411916803570847,
+      "n": 14000
+    },
+    "R1": {
+      "mean": 0.9378381046428464,
+      "lo": 0.9374407992857082,
+      "hi": 0.9382250832142776,
+      "n": 14000
+    },
+    "R2": {
+      "mean": 0.9371011357142753,
+      "lo": 0.9366653424999953,
+      "hi": 0.9374963460714243,
+      "n": 14000
+    },
+    "statsReference": {
+      "mean": 0.9418555999999795,
+      "lo": 0.9415859892856957,
+      "hi": 0.9421118307142671,
+      "n": 14000
+    },
+    "jevV1": {
+      "mean": 0.9301126939285883,
+      "lo": 0.9296774389285912,
+      "hi": 0.9305421503571625,
+      "n": 14000
+    }
+  },
+  "jevMinus": {
+    "R0": {
+      "mean": -0.0003464792857142612,
+      "lo": -0.000680056785714265,
+      "hi": -0.00003655214285711572,
+      "n": 14000
+    },
+    "R1": {
+      "mean": 0.002747786785714251,
+      "lo": 0.0023819649999999755,
+      "hi": 0.0031238139285714194,
+      "n": 14000
+    },
+    "R2": {
+      "mean": 0.003484755714285702,
+      "lo": 0.0030997460714285467,
+      "hi": 0.0038785174999999973,
+      "n": 14000
+    },
+    "statsReference": {
+      "mean": -0.0012697085714285592,
+      "lo": -0.0014439385714285623,
+      "hi": -0.0010979982142856994,
+      "n": 14000
+    },
+    "jevV1": {
+      "mean": 0.010473197499999873,
+      "lo": 0.009997819999999854,
+      "hi": 0.01093230857142846,
+      "n": 14000
+    }
+  },
+  "headroomCaptured": -0.06747454094682592,
+  "jevV1Fallbacks": 0,
+  "realized": {
+    "n": 14000,
+    "jevAuthorizationRate": {
+      "mean": 0.9425,
+      "lo": 0.9386428571428571,
+      "hi": 0.9465,
+      "n": 14000
+    },
+    "r2AuthorizationRate": {
+      "mean": 0.9402142857142857,
+      "lo": 0.9362142857142857,
+      "hi": 0.9442857142857143,
+      "n": 14000
+    },
+    "jevNetCostPerAuthorized": {
+      "mean": 2.0413157210272805,
+      "lo": 1.9022519153126893,
+      "hi": 2.214720125379997,
+      "n": 13195
+    },
+    "r2NetCostPerAuthorized": {
+      "mean": 2.2423246736592306,
+      "lo": 2.04484607771651,
+      "hi": 2.47671961549027,
+      "n": 13163
+    },
+    "jevAverageCallLatencyMs": 202.65692857142858,
+    "jevWorstCallLatencyMs": 3574,
+    "jevAverageCostPerLiveCall": 0.00006548913000000029,
+    "jevLiveCallCount": 14000,
+    "jevOkCount": 14000,
+    "jevInvalidCount": 0,
+    "jevFailedCount": 0,
+    "jevFallbackRate": 0,
+    "disagreementRate": 0.24664285714285714,
+    "disagreementCount": 3453,
+    "onDisagreement": {
+      "jevWins": 1510,
+      "r2Wins": 1921,
+      "ties": 22
+    },
+    "confidenceHistogram": [
+      {
+        "bucketStart": 0,
+        "count": 66
+      },
+      {
+        "bucketStart": 0.1,
+        "count": 113
+      },
+      {
+        "bucketStart": 0.2,
+        "count": 339
+      },
+      {
+        "bucketStart": 0.3,
+        "count": 676
+      },
+      {
+        "bucketStart": 0.4,
+        "count": 721
+      },
+      {
+        "bucketStart": 0.5,
+        "count": 978
+      },
+      {
+        "bucketStart": 0.6,
+        "count": 1151
+      },
+      {
+        "bucketStart": 0.7,
+        "count": 2062
+      },
+      {
+        "bucketStart": 0.8,
+        "count": 3777
+      },
+      {
+        "bucketStart": 0.9,
+        "count": 4117
+      }
+    ]
+  }
+}
