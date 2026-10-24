@@ -167,6 +167,11 @@ async function main() {
       }
 
       const ok = jev.decisions.filter((d) => d.jevStatus === "ok").length;
+      if (ok === 0) {
+        // Every call failed (e.g. an expired key): stop rather than record a run made of R1 fallbacks.
+        console.error(`ABORT: seed ${i} had 0 successful Jev decisions out of ${jev.decisions.length}. Check the API key and balance.`);
+        process.exit(1);
+      }
       console.log(`  seed ${i}/${EVAL_SEED_COUNT}: ${jev.decisions.length} decisions, ${ok} ok, ${jev.decisions.length - ok} fallback (${((Date.now() - started) / 1000).toFixed(0)}s)`);
     }
 
