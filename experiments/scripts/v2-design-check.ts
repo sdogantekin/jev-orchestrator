@@ -24,7 +24,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { eligiblePsps } from "../../lib/domain/eligibility.js";
-import { feeEUR } from "../../lib/domain/fees.js";
 import type { PspConfig } from "../../lib/domain/psp.js";
 import type { PspId } from "../../lib/domain/types.js";
 import { worldAcceptanceRate } from "../../lib/domain/world.js";
@@ -33,6 +32,7 @@ import { naiveRouter } from "../../lib/routers/naive.js";
 import { createRuleRouter, r1Router } from "../../lib/routers/ruleRouter.js";
 import { loadTunedRuleParams } from "../../lib/routers/loadTunedParams.js";
 import { tuneR2 } from "../../lib/routers/tuning.js";
+import { statsReferenceRouter } from "../../lib/routers/statsReference.js";
 import type { RouterFn } from "../../lib/routers/types.js";
 import {
   CONFIG_DIR,
@@ -69,21 +69,8 @@ const followOverall: RouterFn = ({ eligible, observed }) =>
 const followSegment: RouterFn = ({ eligible, observed }) =>
   argmax(eligible, (p) => observed[p.id]?.acceptanceSegment.value ?? observed[p.id]?.acceptanceOverall.value ?? -1);
 
-/**
- * Check-only reference for "simple statistics done right": blend segment and overall
- * acceptance by how much segment data there is (a segment with K attempts counts half), then
- * pick the highest. Not a router in the experiment (yet) — it only answers "can a
- * data-following router win here at all?".
- */
-const SHRINK_K = 100;
-const followShrunk: RouterFn = ({ tx, eligible, observed }) =>
-  argmax(eligible, (p) => {
-    const o = observed[p.id];
-    const overall = o?.acceptanceOverall.value ?? -1;
-    const seg = o?.acceptanceSegment;
-    const blended = seg?.value != null ? (seg.value * seg.sampleSize + overall * SHRINK_K) / (seg.sampleSize + SHRINK_K) : overall;
-    return blended - feeEUR(p, tx.amountEUR) * 1e-9; // fee only breaks exact ties
-  });
+/** "Simple statistics done right" — the same reference the v2 Jev batch reports against. */
+const followShrunk: RouterFn = statsReferenceRouter;
 
 function withHighVolume(resolved: ResolvedScenario): ResolvedScenario {
   return {
@@ -111,7 +98,7 @@ function evaluate(scenarioId: string, sc: ResolvedScenario, r2: RouterFn): Varia
   let errO = 0, errON = 0, errS = 0, errSN = 0;
   const segSizes: number[] = [];
 
-  for (let s = 0; s < EVAL_SEED_COUNT; s++) {
+  for (let s = 1; s <= EVAL_SEED_COUNT; s++) {
     const seed = evalSeed(scenarioId, s);
     const stream = generateStream(seed, STREAM_LENGTH, sc.stream, rates);
     for (let t = TEST_SLICE.start; t <= TEST_SLICE.end; t++) {
