@@ -1,0 +1,74 @@
+{
+  "stable": {
+    "decisions": 14000,
+    "oracle": 0.9500490946428689,
+    "R0": 0.9429160742856616,
+    "R1": 0.9448188489285956,
+    "R2": 0.9421990682143466,
+    "followOverall": 0.9365438767857015,
+    "followSegment": 0.9392508132142785,
+    "jev": 0.9348434478571597,
+    "jevPicksHighestObservedOverall": 0.7806428571428572,
+    "jevPicksHighestObservedSegment": 0.7864285714285715
+  },
+  "drift": {
+    "decisions": 14000,
+    "oracle": 0.9460673339285478,
+    "R0": 0.9409323707142273,
+    "R1": 0.9366195364285669,
+    "R2": 0.9349293439285705,
+    "followOverall": 0.9346348667857052,
+    "followSegment": 0.9330417160714115,
+    "jev": 0.9301126939285883,
+    "jevPicksHighestObservedOverall": 0.7978571428571428,
+    "jevPicksHighestObservedSegment": 0.7607142857142857
+  },
+  "thin_data": {
+    "decisions": 14000,
+    "oracle": 0.9500236514285819,
+    "R0": 0.9430299042856612,
+    "R1": 0.9447501239285964,
+    "R2": 0.9414630610714724,
+    "followOverall": 0.9337860528571522,
+    "followSegment": 0.9390350478571493,
+    "jev": 0.9332641142857598,
+    "jevPicksHighestObservedOverall": 0.7650714285714286,
+    "jevPicksHighestObservedSegment": 0.7106428571428571
+  },
+  "cold_start": {
+    "decisions": 14000,
+    "oracle": 0.9500037446428634,
+    "R0": 0.942965590714233,
+    "R1": 0.9449406960714498,
+    "R2": 0.9431600296429115,
+    "followOverall": 0.9331935539285924,
+    "followSegment": 0.9388101375000021,
+    "jev": 0.9364429378571482,
+    "jevPicksHighestObservedOverall": 0.6812142857142857,
+    "jevPicksHighestObservedSegment": 0.7520714285714286
+  },
+  "conflicting_objectives": {
+    "decisions": 14000,
+    "oracle": 0.9621465237501826,
+    "R0": 0.9532083832145469,
+    "R1": 0.9556141994644561,
+    "R2": 0.9582269689287505,
+    "followOverall": 0.946899150714489,
+    "followSegment": 0.9510851819645053,
+    "jev": 0.945793305178746,
+    "jevPicksHighestObservedOverall": 0.7877857142857143,
+    "jevPicksHighestObservedSegment": 0.7146428571428571
+  },
+  "eligibility_mix": {
+    "decisions": 14000,
+    "oracle": 0.9486531339285696,
+    "R0": 0.9425864682142346,
+    "R1": 0.9434574996428724,
+    "R2": 0.9435369342857322,
+    "followOverall": 0.9354389900000016,
+    "followSegment": 0.938331748928566,
+    "jev": 0.9334138978571686,
+    "jevPicksHighestObservedOverall": 0.7885714285714286,
+    "jevPicksHighestObservedSegment": 0.7675714285714286
+  }
+}
