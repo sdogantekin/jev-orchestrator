@@ -1,0 +1,265 @@
+{
+  "highVolume": {
+    "perTransaction": 20
+  },
+  "scenarios": {
+    "stable": {
+      "v1": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 2.5233243413153863,
+        "observedErrorSegmentPp": 7.634931779199665,
+        "medianSegmentSampleSize": 8,
+        "expectedAuth": {
+          "worst": 0.9034139996429771,
+          "oracle": 0.9500447560714392,
+          "R0": 0.9429169221428046,
+          "R1": 0.9448243114285964,
+          "R2": 0.9422045917857745,
+          "followOverall": 0.9362149157142786,
+          "followSegment": 0.9391344642857067,
+          "followShrunk": 0.9366090267857117
+        }
+      },
+      "v2": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 1.6031844921653222,
+        "observedErrorSegmentPp": 1.9686671499256383,
+        "medianSegmentSampleSize": 151,
+        "expectedAuth": {
+          "worst": 0.9034139996429771,
+          "oracle": 0.9500447560714392,
+          "R0": 0.9429169221428046,
+          "R1": 0.945325023928599,
+          "R2": 0.9428788807143459,
+          "followOverall": 0.9427325210713794,
+          "followSegment": 0.9454923410714509,
+          "followShrunk": 0.9457559275000066
+        }
+      },
+      "v2TunedR2Params": {
+        "preferredForEuCard": "beta",
+        "preferredForUsd": "alpha",
+        "preferredDefault": "gamma",
+        "largeThreshold": 600,
+        "smallThreshold": 30,
+        "safetyAvailabilityThreshold": 0.98,
+        "safetyAcceptanceThreshold": 0.85
+      }
+    },
+    "drift": {
+      "v1": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 2.795983248353685,
+        "observedErrorSegmentPp": 8.471048930795526,
+        "medianSegmentSampleSize": 8,
+        "expectedAuth": {
+          "worst": 0.8676667807142935,
+          "oracle": 0.9460881432142613,
+          "R0": 0.9409360699999413,
+          "R1": 0.9365529689285661,
+          "R2": 0.934974219285712,
+          "followOverall": 0.934449068571418,
+          "followSegment": 0.9331522935714108,
+          "followShrunk": 0.9347131074999913
+        }
+      },
+      "v2": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 1.8188949464100779,
+        "observedErrorSegmentPp": 2.373150758848734,
+        "medianSegmentSampleSize": 153,
+        "expectedAuth": {
+          "worst": 0.8676667807142935,
+          "oracle": 0.9460881432142613,
+          "R0": 0.9409360699999413,
+          "R1": 0.937894149642846,
+          "R2": 0.9371889899999898,
+          "followOverall": 0.9425807614285214,
+          "followSegment": 0.938936093571419,
+          "followShrunk": 0.9419751253571191
+        }
+      },
+      "v2TunedR2Params": {
+        "preferredForEuCard": "beta",
+        "preferredForUsd": "alpha",
+        "preferredDefault": "alpha",
+        "largeThreshold": 400,
+        "smallThreshold": 20,
+        "safetyAvailabilityThreshold": 0.98,
+        "safetyAcceptanceThreshold": 0.85
+      }
+    },
+    "thin_data": {
+      "v1": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 2.536305199746145,
+        "observedErrorSegmentPp": 7.437615741772725,
+        "medianSegmentSampleSize": 9,
+        "expectedAuth": {
+          "worst": 0.9034952121429731,
+          "oracle": 0.9500262053571538,
+          "R0": 0.9430387285713754,
+          "R1": 0.9447187467857409,
+          "R2": 0.9414835728571878,
+          "followOverall": 0.9330546789285815,
+          "followSegment": 0.9389705514285787,
+          "followShrunk": 0.9343516482142998
+        }
+      },
+      "v2": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 1.5961230466154992,
+        "observedErrorSegmentPp": 2.079411006846672,
+        "medianSegmentSampleSize": 130,
+        "expectedAuth": {
+          "worst": 0.9034952121429731,
+          "oracle": 0.9500262053571538,
+          "R0": 0.9430387285713754,
+          "R1": 0.9453186092857423,
+          "R2": 0.9427879464286341,
+          "followOverall": 0.9428782314285215,
+          "followSegment": 0.9447520753571604,
+          "followShrunk": 0.9424323567856889
+        }
+      },
+      "v2TunedR2Params": {
+        "preferredForEuCard": "beta",
+        "preferredForUsd": "alpha",
+        "preferredDefault": "gamma",
+        "largeThreshold": 600,
+        "smallThreshold": 30,
+        "safetyAvailabilityThreshold": 0.98,
+        "safetyAcceptanceThreshold": 0.85
+      }
+    },
+    "cold_start": {
+      "v1": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 3.3160257792696832,
+        "observedErrorSegmentPp": 7.041712594745365,
+        "medianSegmentSampleSize": 12,
+        "expectedAuth": {
+          "worst": 0.9037043728572586,
+          "oracle": 0.9499904589285783,
+          "R0": 0.9429516414285185,
+          "R1": 0.9448548050000191,
+          "R2": 0.9431187310714829,
+          "followOverall": 0.9326501250000201,
+          "followSegment": 0.9385591264285781,
+          "followShrunk": 0.9337949982143061
+        }
+      },
+      "v2": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 2.72011393439039,
+        "observedErrorSegmentPp": 2.8279288537036593,
+        "medianSegmentSampleSize": 100,
+        "expectedAuth": {
+          "worst": 0.9037043728572586,
+          "oracle": 0.9499904589285783,
+          "R0": 0.9429516414285185,
+          "R1": 0.9456924435714529,
+          "R2": 0.9437827871429081,
+          "followOverall": 0.9332452842857493,
+          "followSegment": 0.9402287364286216,
+          "followShrunk": 0.9392812453571797
+        }
+      },
+      "v2TunedR2Params": {
+        "preferredForEuCard": "beta",
+        "preferredForUsd": "alpha",
+        "preferredDefault": "gamma",
+        "largeThreshold": 600,
+        "smallThreshold": 20,
+        "safetyAvailabilityThreshold": 0.98,
+        "safetyAcceptanceThreshold": 0.85
+      }
+    },
+    "conflicting_objectives": {
+      "v1": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 2.5016361402198086,
+        "observedErrorSegmentPp": 6.872810095556351,
+        "medianSegmentSampleSize": 8,
+        "expectedAuth": {
+          "worst": 0.9170949396429557,
+          "oracle": 0.9621285833930403,
+          "R0": 0.9532026803574036,
+          "R1": 0.9555579730358856,
+          "R2": 0.9582064666073222,
+          "followOverall": 0.9472996903573556,
+          "followSegment": 0.9511812717859349,
+          "followShrunk": 0.9480842126787847
+        }
+      },
+      "v2": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 1.6973880685069613,
+        "observedErrorSegmentPp": 1.8786182520610615,
+        "medianSegmentSampleSize": 181,
+        "expectedAuth": {
+          "worst": 0.9170949396429557,
+          "oracle": 0.9621285833930403,
+          "R0": 0.9532026803574036,
+          "R1": 0.9559649787501737,
+          "R2": 0.9584612196430408,
+          "followOverall": 0.9530077460716875,
+          "followSegment": 0.9580651228573184,
+          "followShrunk": 0.9581377896430542
+        }
+      },
+      "v2TunedR2Params": {
+        "preferredForEuCard": "beta",
+        "preferredForUsd": "alpha",
+        "preferredDefault": "alpha",
+        "largeThreshold": 400,
+        "smallThreshold": 20,
+        "safetyAvailabilityThreshold": 0.99,
+        "safetyAcceptanceThreshold": 0.88
+      }
+    },
+    "eligibility_mix": {
+      "v1": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 2.5361434410563697,
+        "observedErrorSegmentPp": 8.20388411230373,
+        "medianSegmentSampleSize": 7,
+        "expectedAuth": {
+          "worst": 0.9038390257143992,
+          "oracle": 0.9486303760714271,
+          "R0": 0.9425935778570916,
+          "R1": 0.9435382596428727,
+          "R2": 0.9435342889285898,
+          "followOverall": 0.9353674653571397,
+          "followSegment": 0.9382008817857078,
+          "followShrunk": 0.9355798121428558
+        }
+      },
+      "v2": {
+        "decisions": 14000,
+        "observedErrorOverallPp": 1.569204757917036,
+        "observedErrorSegmentPp": 2.0397744948220673,
+        "medianSegmentSampleSize": 137,
+        "expectedAuth": {
+          "worst": 0.9038390257143992,
+          "oracle": 0.9486303760714271,
+          "R0": 0.9425935778570916,
+          "R1": 0.9439359860714482,
+          "R2": 0.945748661071442,
+          "followOverall": 0.9423033921428138,
+          "followSegment": 0.9437391357142967,
+          "followShrunk": 0.9444088032142791
+        }
+      },
+      "v2TunedR2Params": {
+        "preferredForEuCard": "beta",
+        "preferredForUsd": "alpha",
+        "preferredDefault": "alpha",
+        "largeThreshold": 400,
+        "smallThreshold": 20,
+        "safetyAvailabilityThreshold": 0.98,
+        "safetyAcceptanceThreshold": 0.85
+      }
+    }
+  }
+}

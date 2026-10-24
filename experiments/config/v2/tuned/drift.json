@@ -1,0 +1,9 @@
+{
+  "preferredForEuCard": "beta",
+  "preferredForUsd": "alpha",
+  "preferredDefault": "alpha",
+  "largeThreshold": 400,
+  "smallThreshold": 20,
+  "safetyAvailabilityThreshold": 0.98,
+  "safetyAcceptanceThreshold": 0.85
+}

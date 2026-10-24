@@ -21,6 +21,10 @@ export interface PspOutcome {
  * (seed, transactionIndex, psp, world, tx): it does not depend on which router picked the PSP,
  * so two routers choosing the same PSP for the same transaction always get this same result
  * (common random numbers).
+ *
+ * `worldTimeIndex` is the point on the main stream's timeline used for drift; it defaults to
+ * `transactionIndex`. Only the v2 high-volume background history sets it, since there many
+ * background transactions share one point in main-stream time.
  */
 export function simulatePspOutcome(
   seed: string,
@@ -28,11 +32,12 @@ export function simulatePspOutcome(
   tx: Transaction,
   psp: PspConfig,
   world: WorldConfig,
-  chargebackFixedFeeEUR?: number
+  chargebackFixedFeeEUR?: number,
+  worldTimeIndex: number = transactionIndex
 ): PspOutcome {
   const available = bernoulli(psp.availabilityRate, pspDraw(seed, transactionIndex, psp.id, "availability"));
 
-  const acceptanceRate = worldAcceptanceRate(world, psp.id, tx, transactionIndex);
+  const acceptanceRate = worldAcceptanceRate(world, psp.id, tx, worldTimeIndex);
   const authorized =
     available && bernoulli(acceptanceRate, pspDraw(seed, transactionIndex, psp.id, "authorization"));
 

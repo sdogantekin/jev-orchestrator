@@ -2,6 +2,7 @@ import { checkEligibility } from "../domain/eligibility.js";
 import type { PspConfig } from "../domain/psp.js";
 import { segmentKeyEquals, segmentKeyOf, type PspId, type SegmentKey, type Transaction } from "../domain/types.js";
 import type { WorldConfig } from "../domain/world.js";
+import { highVolumeAttempts, type HighVolumeHistoryConfig } from "./backgroundHistory.js";
 import { simulatePspOutcome } from "./outcome.js";
 
 export interface ObservedStat {
@@ -36,6 +37,8 @@ export interface ObservedViewConfig {
   lag: number;
   window: number;
   backgroundHistoryLimits: BackgroundHistoryLimit[];
+  /** v2 only: observed stats come from a separate, larger background stream instead of the main stream. */
+  highVolumeHistory?: HighVolumeHistoryConfig;
 }
 
 function partialSegmentMatches(partial: Partial<SegmentKey> | undefined, key: SegmentKey): boolean {
@@ -86,13 +89,17 @@ function gatherBackgroundAttempts(
   const limit = findLimit(cfg.backgroundHistoryLimits, psp.id, segmentKey);
   const lo = limit ? 0 : Math.max(0, t - cfg.lag - cfg.window);
 
-  const attempts: ReturnType<typeof simulatePspOutcome>[] = [];
-  for (let i = lo; i <= hi; i++) {
-    const tx = stream[i];
-    if (!tx) continue;
-    if (!checkEligibility(psp, tx).eligible) continue;
-    if (segmentKey && !segmentKeyEquals(segmentKeyOf(tx), segmentKey)) continue;
-    attempts.push(simulatePspOutcome(seed, i, tx, psp, world));
+  let attempts: ReturnType<typeof simulatePspOutcome>[] = [];
+  if (cfg.highVolumeHistory) {
+    attempts = highVolumeAttempts(cfg.highVolumeHistory, world, seed, psp, lo, hi, (tx) => !segmentKey || segmentKeyEquals(segmentKeyOf(tx), segmentKey));
+  } else {
+    for (let i = lo; i <= hi; i++) {
+      const tx = stream[i];
+      if (!tx) continue;
+      if (!checkEligibility(psp, tx).eligible) continue;
+      if (segmentKey && !segmentKeyEquals(segmentKeyOf(tx), segmentKey)) continue;
+      attempts.push(simulatePspOutcome(seed, i, tx, psp, world));
+    }
   }
 
   if (limit && attempts.length > limit.maxAttempts) {
@@ -152,7 +159,30 @@ export function computeRecentSegmentOutcomes(
     .map((a) => a.authorized);
 }
 
+/** v2 high-volume path only: observed stats are expensive there and R2 tuning asks for the same ones ~1,500 times. */
+const highVolumeMemo = new WeakMap<ObservedViewConfig, WeakMap<WorldConfig, Map<string, ObservedPspStats>>>();
+
 export function computeObservedView(
+  stream: Transaction[],
+  transactionIndex: number,
+  currentTx: Transaction,
+  psp: PspConfig,
+  world: WorldConfig,
+  seed: string,
+  cfg: ObservedViewConfig
+): ObservedPspStats {
+  if (!cfg.highVolumeHistory) return computeObservedViewUncached(stream, transactionIndex, currentTx, psp, world, seed, cfg);
+  let byWorld = highVolumeMemo.get(cfg);
+  if (!byWorld) highVolumeMemo.set(cfg, (byWorld = new WeakMap()));
+  let memo = byWorld.get(world);
+  if (!memo) byWorld.set(world, (memo = new Map()));
+  const key = `${seed}|${transactionIndex}|${psp.id}`;
+  let stats = memo.get(key);
+  if (!stats) memo.set(key, (stats = computeObservedViewUncached(stream, transactionIndex, currentTx, psp, world, seed, cfg)));
+  return stats;
+}
+
+function computeObservedViewUncached(
   stream: Transaction[],
   transactionIndex: number,
   currentTx: Transaction,
