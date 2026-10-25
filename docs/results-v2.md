@@ -4,6 +4,9 @@ Run 2026-10-24, scored against `docs/hypotheses-v2.md` (committed before the run
 `typesafe/jev-1.13`, data richness level 2, 6 scenarios x eval seeds 1-20 x 700 test-slice
 decisions. Raw results: `experiments/results/jev-v2-<scenario>.json`.
 
+*Codes:* V2-H1…V2-H5 below are shown as **EXP2-H1…EXP2-H5** on the website and in the Medium
+post (and Experiment 1's H1-H5 as EXP1-H1…EXP1-H5).
+
 **Run health:** 84,000 live calls, 84,000 ok, 0 invalid, 0 failed, 0 fallbacks. Total cost
 $5.45. Average call latency 200ms, worst 10.9s. The v1 replay found every recorded answer
 (0 fallbacks). An earlier attempt the same day failed on an expired API key (every call

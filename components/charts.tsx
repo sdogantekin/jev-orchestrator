@@ -1,3 +1,5 @@
+import { HypothesisBadge } from "./HypothesisBadge";
+
 export interface SeriesSpec {
   key: string;
   label: string;
@@ -204,15 +206,9 @@ export function ChartSection({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
         {hypotheses && hypotheses.length > 0 && (
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             {hypotheses.map((h) => (
-              <span
-                key={h.id}
-                title={h.text}
-                className="cursor-help rounded-full border border-indigo-500/40 bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-300"
-              >
-                {h.id}
-              </span>
+              <HypothesisBadge key={h.id} id={h.id} text={h.text} />
             ))}
           </div>
         )}

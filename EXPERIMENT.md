@@ -80,6 +80,9 @@ get an honest answer to one narrow question, and to report that answer even if �
 Committed in `docs/hypotheses.md`, dated, **before** any simulator or router code existed, so
 nothing below could be fitted to a result we'd already seen.
 
+*Codes:* this report uses the codes from the hypotheses files. The website and the Medium post
+show H1-H5 as **EXP1-H1…EXP1-H5**, and Experiment 2's V2-H1-V2-H5 as **EXP2-H1…EXP2-H5**.
+
 | ID | Hypothesis |
 |---|---|
 | H1 | Jev responds correctly to the data it is given: when one PSP's metric improves and everything else is fixed, its probability for that PSP rises sensibly. |

@@ -146,22 +146,23 @@ export interface JevV2Result {
   realized: JevMainResult["summary"];
 }
 
-/** Mirrors docs/hypotheses.md verbatim, so chart badges can show the exact text without parsing the file at render time. */
+/** Mirrors docs/hypotheses.md verbatim, so chart badges can show the exact text without parsing the file at render time.
+ * The site shows its H1-H5 as EXP1-H1..H5 (and hypotheses-v2.md's V2-H1..H5 as EXP2-H1..H5). */
 export const HYPOTHESES: Record<string, string> = {
-  H1: "Jev responds correctly to the data it is given: when one PSP's metric improves and everything else is fixed, its probability for that PSP rises sensibly.",
-  H2: "On stable traffic, Jev roughly matches a well-tuned rule set.",
-  H3: "When rules go stale (a PSP degrades mid-stream) or data is thin (cold start, rare segments), Jev does better than static rules.",
-  H4: "Jev loses to rules on decision latency, cost per decision, determinism and auditability.",
-  H5: "Jev's output is mostly but not perfectly consistent: repeated calls and harmless input changes (PSP order, field order) sometimes change the choice.",
+  "EXP1-H1": "Jev responds correctly to the data it is given: when one PSP's metric improves and everything else is fixed, its probability for that PSP rises sensibly.",
+  "EXP1-H2": "On stable traffic, Jev roughly matches a well-tuned rule set.",
+  "EXP1-H3": "When rules go stale (a PSP degrades mid-stream) or data is thin (cold start, rare segments), Jev does better than static rules.",
+  "EXP1-H4": "Jev loses to rules on decision latency, cost per decision, determinism and auditability.",
+  "EXP1-H5": "Jev's output is mostly but not perfectly consistent: repeated calls and harmless input changes (PSP order, field order) sometimes change the choice.",
 };
 
-/** Mirrors docs/hypotheses-v2.md (Experiment 2, pre-registered 2026-10-24), hypothesis and pass rule. */
+/** Mirrors docs/hypotheses-v2.md (Experiment 2), hypothesis and pass rule. */
 export const HYPOTHESES_V2: Record<string, { text: string; supportedIf: string }> = {
-  "V2-H1": { text: "More data helps Jev.", supportedIf: "Jev (v2) − Jev (v1) is positive with CI above zero in at least 5 of 6 scenarios." },
-  "V2-H2": { text: "With good data, Jev no longer loses to the rules on stable traffic.", supportedIf: "On Stable, the CI of Jev − R1 includes zero or is above it." },
-  "V2-H3": { text: "With good data, Jev beats static rules when a PSP drifts.", supportedIf: "On Drift, Jev − R1 and Jev − R2 are both positive with CI above zero." },
-  "V2-H4": { text: "Cold start still hurts Jev.", supportedIf: "On Cold start, Jev − R1 is negative with CI below zero." },
-  "V2-H5": { text: "Jev adds nothing beyond simple statistics.", supportedIf: "In no scenario is Jev − statistics reference positive with CI above zero." },
+  "EXP2-H1": { text: "More data helps Jev.", supportedIf: "Jev (v2) − Jev (v1) is positive with CI above zero in at least 5 of 6 scenarios." },
+  "EXP2-H2": { text: "With good data, Jev no longer loses to the rules on stable traffic.", supportedIf: "On Stable, the CI of Jev − R1 includes zero or is above it." },
+  "EXP2-H3": { text: "With good data, Jev beats static rules when a PSP drifts.", supportedIf: "On Drift, Jev − R1 and Jev − R2 are both positive with CI above zero." },
+  "EXP2-H4": { text: "Cold start still hurts Jev.", supportedIf: "On Cold start, Jev − R1 is negative with CI below zero." },
+  "EXP2-H5": { text: "Jev adds nothing beyond simple statistics.", supportedIf: "In no scenario is Jev − statistics reference positive with CI above zero." },
 };
 
 export function hypotheses(...ids: string[]): Array<{ id: string; text: string }> {

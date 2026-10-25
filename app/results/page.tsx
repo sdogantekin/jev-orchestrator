@@ -1,5 +1,7 @@
 import { ChartSection, GroupedBarChart, LineChart, ProportionBar, SimpleTable, StatTile } from "../../components/charts";
-import { HYPOTHESES_V2, hypotheses, loadAllResults } from "../../lib/results/loadResults";
+import { HYPOTHESES, HYPOTHESES_V2, hypotheses, loadAllResults } from "../../lib/results/loadResults";
+import { OpenOnHypothesisHash } from "../../components/HypothesisBadge";
+import { TEST_SETUP_ID, hypothesisAnchor } from "../../lib/content/hypothesisLinks";
 import { SCENARIO_IDS } from "../../lib/simulation/scenarios";
 import { DEFAULT_JEV_MODEL } from "../../lib/jev/config";
 import { EVAL_SEED_COUNT, SENSITIVITY_SEED_COUNT } from "../../lib/experiments/seeds";
@@ -16,6 +18,32 @@ const SCENARIO_LABELS: Record<string, string> = {
   conflicting_objectives: "Conflicting objectives",
   eligibility_mix: "Eligibility mix",
 };
+
+/** Experiment 1 verdicts, as reported in EXPERIMENT.md Section 8. */
+const V1_VERDICTS: Record<string, { label: string; tone: "good" | "bad" | "mixed" }> = {
+  "EXP1-H1": { label: "Supported", tone: "good" },
+  "EXP1-H2": { label: "Weakly contradicted: R2 is 0.70pp ahead on Stable", tone: "bad" },
+  "EXP1-H3": { label: "Not supported: the gap was larger on thin data and cold start", tone: "bad" },
+  "EXP1-H4": { label: "Supported, with a nuance on auditability", tone: "mixed" },
+  "EXP1-H5": { label: "Supported", tone: "good" },
+};
+
+const TONE_CLASS = { good: "text-emerald-400", bad: "text-rose-400", mixed: "text-amber-300" } as const;
+
+function HypothesisItem({ id, text, verdict, tone }: { id: string; text: string; verdict: string; tone: keyof typeof TONE_CLASS }) {
+  return (
+    <li
+      id={hypothesisAnchor(id)}
+      className="scroll-mt-32 rounded-lg p-2 transition-colors duration-500 data-[highlight=true]:bg-indigo-500/15 data-[highlight=true]:ring-1 data-[highlight=true]:ring-indigo-400/60"
+    >
+      <div className="text-sm text-slate-200">
+        <span className="mr-2 whitespace-nowrap rounded-full border border-indigo-500/40 bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-300">{id}</span>
+        {text}
+      </div>
+      <div className={`mt-1 text-sm ${TONE_CLASS[tone]}`}>{verdict}</div>
+    </li>
+  );
+}
 
 function pct(v: number): string {
   return `${(v * 100).toFixed(1)}%`;
@@ -64,14 +92,14 @@ export default function ResultsPage() {
   // Verdicts computed from the data with the exact pass rules committed in docs/hypotheses-v2.md.
   const minus = (id: (typeof SCENARIO_IDS)[number]) => jevV2Results[id].jevMinus;
   const v2Verdicts: Record<string, { supported: boolean; evidence: string }> = {
-    "V2-H1": {
+    "EXP2-H1": {
       supported: SCENARIO_IDS.filter((id) => minus(id).jevV1.lo > 0).length >= 5,
       evidence: `Jev gained ${(Math.min(...SCENARIO_IDS.map((id) => minus(id).jevV1.mean)) * 100).toFixed(2)} to ${(Math.max(...SCENARIO_IDS.map((id) => minus(id).jevV1.mean)) * 100).toFixed(2)} points, CI above zero in ${SCENARIO_IDS.filter((id) => minus(id).jevV1.lo > 0).length} of 6 scenarios.`,
     },
-    "V2-H2": { supported: minus("stable").R1.hi >= 0, evidence: `Stable: Jev − R1 = ${pp(minus("stable").R1)}.` },
-    "V2-H3": { supported: minus("drift").R1.lo > 0 && minus("drift").R2.lo > 0, evidence: `Drift: Jev − R1 = ${pp(minus("drift").R1)}, Jev − R2 = ${pp(minus("drift").R2)}.` },
-    "V2-H4": { supported: minus("cold_start").R1.hi < 0, evidence: `Cold start: Jev − R1 = ${pp(minus("cold_start").R1)}.` },
-    "V2-H5": {
+    "EXP2-H2": { supported: minus("stable").R1.hi >= 0, evidence: `Stable: Jev − R1 = ${pp(minus("stable").R1)}.` },
+    "EXP2-H3": { supported: minus("drift").R1.lo > 0 && minus("drift").R2.lo > 0, evidence: `Drift: Jev − R1 = ${pp(minus("drift").R1)}, Jev − R2 = ${pp(minus("drift").R2)}.` },
+    "EXP2-H4": { supported: minus("cold_start").R1.hi < 0, evidence: `Cold start: Jev − R1 = ${pp(minus("cold_start").R1)}.` },
+    "EXP2-H5": {
       supported: SCENARIO_IDS.every((id) => minus(id).statsReference.lo <= 0),
       evidence: `Jev − statistics reference: ${SCENARIO_IDS.map((id) => `${SCENARIO_LABELS[id]} ${(minus(id).statsReference.mean * 100).toFixed(2)}`).join(", ")} points.`,
     },
@@ -178,36 +206,86 @@ export default function ResultsPage() {
         </p>
       </section>
 
-      <div className="mb-8 grid gap-4 rounded-xl border border-slate-800 bg-slate-900/40 p-5 sm:grid-cols-2">
-        <div>
-          <h2 className="mb-2 text-sm font-semibold text-slate-200">Routers</h2>
-          <dl className="space-y-2 text-sm">
-            {(["R0", "R1", "R2", "Jev"] as const).map((key) => (
-              <div key={key}>
-                <dt className="font-medium" style={{ color: COLORS[key] }}>
-                  {key === "Jev" ? "R3 Jev" : key}
-                </dt>
-                <dd className="text-slate-400">{ROUTER_DESCRIPTIONS[key]}</dd>
+      <details id={TEST_SETUP_ID} className="group/setup mb-8 rounded-xl border border-slate-800 bg-slate-900/40">
+        <summary className="flex cursor-pointer list-none items-center gap-3 p-5 [&::-webkit-details-marker]:hidden">
+          <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5 shrink-0 fill-current text-slate-400 transition-transform group-open/setup:rotate-90">
+            <path d="M7.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 1 1-1.4-1.4L11.6 10 7.3 5.7a1 1 0 0 1 0-1.4z" />
+          </svg>
+          <span>
+            <span className="block text-lg font-semibold text-slate-100">How the test was set up</span>
+            <span className="block text-sm text-slate-400">Hypotheses · Routers · Scenarios</span>
+          </span>
+        </summary>
+        <OpenOnHypothesisHash />
+        <div className="space-y-8 border-t border-slate-800 p-5">
+          <div>
+            <h2 className="mb-1 text-base font-semibold text-slate-200">Hypotheses</h2>
+            <p className="mb-3 text-sm text-slate-400">Written down before each experiment ran. The badges on the charts below refer to these.</p>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-slate-300">Experiment 1</h3>
+                <ul className="space-y-1">
+                  {Object.entries(HYPOTHESES).map(([id, text]) => (
+                    <HypothesisItem key={id} id={id} text={text} verdict={V1_VERDICTS[id]!.label} tone={V1_VERDICTS[id]!.tone} />
+                  ))}
+                </ul>
               </div>
-            ))}
-          </dl>
-        </div>
-        <div>
-          <h2 className="mb-2 text-sm font-semibold text-slate-200">Scenarios</h2>
-          <dl className="space-y-2 text-sm">
-            {SCENARIO_IDS.map((id) => (
-              <div key={id}>
-                <dt className="font-medium text-slate-200">{SCENARIO_LABELS[id]}</dt>
-                <dd className="text-slate-400">{SCENARIO_DESCRIPTIONS[id]}</dd>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-slate-300">Experiment 2</h3>
+                <ul className="space-y-1">
+                  {Object.entries(HYPOTHESES_V2).map(([id, h]) => (
+                    <HypothesisItem
+                      key={id}
+                      id={id}
+                      text={h.text}
+                      verdict={v2Verdicts[id]!.supported ? "Supported" : "Not supported"}
+                      tone={v2Verdicts[id]!.supported ? "good" : "bad"}
+                    />
+                  ))}
+                </ul>
               </div>
-            ))}
-          </dl>
+            </div>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <h2 className="mb-2 text-base font-semibold text-slate-200">Routers</h2>
+              <dl className="space-y-2 text-sm">
+                {(["R0", "R1", "R2", "Jev"] as const).map((key) => (
+                  <div key={key}>
+                    <dt className="font-medium" style={{ color: COLORS[key] }}>
+                      {key === "Jev" ? "R3 Jev" : key}
+                    </dt>
+                    <dd className="text-slate-400">{ROUTER_DESCRIPTIONS[key]}</dd>
+                  </div>
+                ))}
+                <div>
+                  <dt className="font-medium" style={{ color: COLORS.Stats }}>
+                    Statistics reference (Experiment 2)
+                  </dt>
+                  <dd className="text-slate-400">
+                    A yardstick, not a competitor: blends each PSP&apos;s segment and overall acceptance by how much data is behind them, then picks the highest.
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            <div>
+              <h2 className="mb-2 text-base font-semibold text-slate-200">Scenarios</h2>
+              <dl className="space-y-2 text-sm">
+                {SCENARIO_IDS.map((id) => (
+                  <div key={id}>
+                    <dt className="font-medium text-slate-200">{SCENARIO_LABELS[id]}</dt>
+                    <dd className="text-slate-400">{SCENARIO_DESCRIPTIONS[id]}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
 
       <h2 className="mb-4 mt-2 text-xl font-semibold text-slate-100">Experiment 1: the original test</h2>
 
-      <ChartSection title="Authorization rate by scenario and router" hypotheses={hypotheses("H2", "H3")}>
+      <ChartSection title="Authorization rate by scenario and router" hypotheses={hypotheses("EXP1-H2", "EXP1-H3")}>
         <p className="mb-3 text-sm text-slate-400">
           95% bootstrap confidence intervals (shown as whiskers), {ruleResults.stable.decisionCount.toLocaleString()} decisions per bar.
         </p>
@@ -224,7 +302,7 @@ export default function ResultsPage() {
           yMax={0.97}
         />
         <p className="mt-3 text-sm text-slate-300">
-          R2 beats Jev&apos;s authorization rate in every scenario (0.70–1.36 points), significantly so (non-overlapping CIs) in 4 of 6. H3 predicted
+          R2 beats Jev&apos;s authorization rate in every scenario (0.70–1.36 points), significantly so (non-overlapping CIs) in 4 of 6. EXP1-H3 predicted
           Jev might have an edge in thin_data/cold_start; instead the gap there is as large or larger than on stable.
         </p>
         <p className="mt-2 text-sm text-slate-300">
@@ -267,13 +345,13 @@ export default function ResultsPage() {
 
       <h2 className="mb-2 mt-10 text-xl font-semibold text-slate-100">Experiment 2: the same test with 20× more data</h2>
       <p className="mb-4 max-w-3xl text-sm text-slate-400">
-        Pre-registered before any Jev call (<code className="rounded bg-slate-800 px-1.5 py-0.5">docs/hypotheses-v2.md</code>). One change: each PSP&apos;s
+        Predictions were written down before any Jev call. One change: each PSP&apos;s
         observed numbers come from {v2DesignCheck.highVolume.perTransaction}× more past payments. Median segment sample {nV1} → {nV2}; segment rate error{" "}
         {errV1.toFixed(1)} → {errV2.toFixed(1)} points. Same world, scenarios, transactions, seeds and model. R2 retuned on the new data. 84,000 live calls,
         all successful.
       </p>
 
-      <ChartSection title="Expected authorization rate with good data" hypotheses={hypotheses("V2-H1", "V2-H2", "V2-H3", "V2-H4", "V2-H5")}>
+      <ChartSection title="Expected authorization rate with good data" hypotheses={hypotheses("EXP2-H1", "EXP2-H2", "EXP2-H3", "EXP2-H4", "EXP2-H5")}>
         <p className="mb-3 text-sm text-slate-400">
           Expected authorization (true approval probability of each choice), {jevV2Results.stable.expectedAuth.jev.n.toLocaleString()} decisions per bar, 95%
           paired bootstrap CIs. &quot;Jev, Exp. 1&quot; is the same model on the same transactions with Experiment 1&apos;s data. The statistics reference blends
@@ -305,7 +383,7 @@ export default function ResultsPage() {
       <ChartSection title="Experiment 2: hypothesis verdicts">
         <SimpleTable
           columns={["ID", "Hypothesis", "Supported if", "Verdict", "Evidence"]}
-          rows={Object.entries(HYPOTHESES_V2).map(([id, h]) => [id, h.text, h.supportedIf, v2Verdicts[id]!.supported ? "✅ Supported" : "❌ Not supported", v2Verdicts[id]!.evidence])}
+          rows={Object.entries(HYPOTHESES_V2).map(([id, h]) => [id.replace("-", "\u2011"), h.text, h.supportedIf, v2Verdicts[id]!.supported ? "✅ Supported" : "❌ Not supported", v2Verdicts[id]!.evidence])}
         />
         <p className="mt-3 text-sm text-slate-300">
           Caveats: on drift Jev beats the rules but only ties R0, because this world degrades the PSP that &quot;always Alpha&quot; mostly avoids. And a router
@@ -315,7 +393,7 @@ export default function ResultsPage() {
 
       <h2 className="mb-4 mt-10 text-xl font-semibold text-slate-100">More detail from Experiment 1</h2>
 
-      <ChartSection title="Net cost per authorized transaction" hypotheses={hypotheses("H2")}>
+      <ChartSection title="Net cost per authorized transaction" hypotheses={hypotheses("EXP1-H2")}>
         <GroupedBarChart
           groups={costGroups}
           series={[
@@ -328,7 +406,7 @@ export default function ResultsPage() {
         />
       </ChartSection>
 
-      <ChartSection title="Disagreement rate between Jev and R2, and who wins on disagreement" hypotheses={hypotheses("H2")}>
+      <ChartSection title="Disagreement rate between Jev and R2, and who wins on disagreement" hypotheses={hypotheses("EXP1-H2")}>
         <GroupedBarChart groups={disagreementGroups} series={[{ key: "Rate", label: "Disagreement rate", color: COLORS.Jev }]} yFormat={pct} yMin={0} yMax={0.6} />
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SCENARIO_IDS.map((id) => {
@@ -349,7 +427,7 @@ export default function ResultsPage() {
         </div>
       </ChartSection>
 
-      <ChartSection title="Jev decision cost and latency" hypotheses={hypotheses("H4")}>
+      <ChartSection title="Jev decision cost and latency" hypotheses={hypotheses("EXP1-H4")}>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatTile label="Avg call latency" value={`${jevMainResults.stable.summary.jevAverageCallLatencyMs.toFixed(0)}ms`} sublabel="vs ~0ms for a rule" />
           <StatTile label="Worst call latency" value={`${jevMainResults.stable.summary.jevWorstCallLatencyMs.toFixed(0)}ms`} />
@@ -358,7 +436,7 @@ export default function ResultsPage() {
         </div>
       </ChartSection>
 
-      <ChartSection title="Data richness: does more observed history change the outcome?" hypotheses={hypotheses("H1")}>
+      <ChartSection title="Data richness: does more observed history change the outcome?" hypotheses={hypotheses("EXP1-H1")}>
         <p className="mb-3 text-sm text-slate-400">Levels 1 (overall only), 2 (+ segment stats), 3 (+ last 20 same-segment outcomes). Same 20 seeds.</p>
         <GroupedBarChart
           groups={richnessAuthGroups}
@@ -389,7 +467,7 @@ export default function ResultsPage() {
         </p>
       </ChartSection>
 
-      <ChartSection title="Sensitivity check: does the conclusion hold under a perturbed world design?" hypotheses={hypotheses("H2")}>
+      <ChartSection title="Sensitivity check: does the conclusion hold under a perturbed world design?" hypotheses={hypotheses("EXP1-H2")}>
         <p className="mb-3 text-sm text-slate-400">
           Stable scenario only, {SENSITIVITY_SEED_COUNT} seeds per variant (fewer than the main results — a robustness check, not a main-table number).
         </p>
@@ -397,7 +475,7 @@ export default function ResultsPage() {
         <p className="mt-3 text-sm text-slate-300">None of the 9 variants flipped the direction: R2 beat Jev in every one.</p>
       </ChartSection>
 
-      <ChartSection title="Probe: responsiveness" hypotheses={hypotheses("H1")}>
+      <ChartSection title="Probe: responsiveness" hypotheses={hypotheses("EXP1-H1")}>
         <p className="mb-3 text-sm text-slate-400">
           One PSP&apos;s observed acceptance swept from below to above a fixed competitor&apos;s value ({probes.responsiveness.fixedCompetitorId} at{" "}
           {probes.responsiveness.fixedCompetitorAcceptance}), holding everything else fixed. Mean of 3 repeated calls per step.
@@ -411,7 +489,7 @@ export default function ResultsPage() {
         />
       </ChartSection>
 
-      <ChartSection title="Probe: trade-off" hypotheses={hypotheses("H1")}>
+      <ChartSection title="Probe: trade-off" hypotheses={hypotheses("EXP1-H1")}>
         <p className="mb-3 text-sm text-slate-400">
           {probes.tradeOff.expensivePspId} (higher acceptance, higher fee) vs {probes.tradeOff.cheapPspId} (lower acceptance, lower fee), a 1-point
           acceptance gap. Small amount (€10) and large amount (€800), 5 repeats each.
@@ -431,7 +509,7 @@ export default function ResultsPage() {
         </p>
       </ChartSection>
 
-      <ChartSection title="Probe: irrelevance" hypotheses={hypotheses("H5")}>
+      <ChartSection title="Probe: irrelevance" hypotheses={hypotheses("EXP1-H5")}>
         <p className="mb-3 text-sm text-slate-400">5 harmless variations (shuffled PSP order, renamed display names, reordered metric glossary, an added unrelated field), 3 repeats each.</p>
         <SimpleTable
           columns={["Variant", "Choices across 3 repeats"]}
@@ -444,7 +522,7 @@ export default function ResultsPage() {
         </p>
       </ChartSection>
 
-      <ChartSection title="Probe: repeatability" hypotheses={hypotheses("H5")}>
+      <ChartSection title="Probe: repeatability" hypotheses={hypotheses("EXP1-H5")}>
         <p className="mb-3 text-sm text-slate-400">Same state, 20 independent live calls.</p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <StatTile label="Distinct choices" value={String(probes.repeatability.distinctChoiceCount)} sublabel="out of 20 calls" />
@@ -453,7 +531,7 @@ export default function ResultsPage() {
         </div>
       </ChartSection>
 
-      <ChartSection title="Calibration: when Jev states probability p for a PSP, how often is it actually the best option?" hypotheses={hypotheses("H1", "H4")}>
+      <ChartSection title="Calibration: when Jev states probability p for a PSP, how often is it actually the best option?" hypotheses={hypotheses("EXP1-H1", "EXP1-H4")}>
         <p className="mb-3 text-sm text-slate-400">
           Derived from the main comparison&apos;s {calibration.samplesUsed.toLocaleString()} (PSP, probability) samples — &quot;best&quot; means the
           ground-truth best PSP among the eligible set for that transaction (section 9.1&apos;s rule), not simple authorization.
