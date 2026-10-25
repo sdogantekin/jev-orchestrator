@@ -46,6 +46,9 @@ export async function runJevDecision(args: {
     dataRichnessLevel: 2,
     model: process.env.JEV_MODEL?.trim() || "typesafe/jev-1.13",
     cache: createInMemoryCache(),
+    // Visitor requests never read or write the experiment's recorded fixtures: those belong to the
+    // batch runs, and the deployed server's filesystem is read-only.
+    useFixtures: false,
     allowLive: args.allowLive,
     apiKey: args.apiKey,
   });
