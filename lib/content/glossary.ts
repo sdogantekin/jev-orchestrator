@@ -3,7 +3,7 @@ import type { ScenarioId } from "../simulation/scenarios";
 export const ROUTER_DESCRIPTIONS = {
   R0: "Naive floor: always picks the same PSP. Exists only to show there's room for any router to matter — beating this proves nothing.",
   R1: "Hand-tuned rules: an ordered rule list reflecting what a payments team would plausibly write from PSP contracts and dashboards.",
-  R2: "Tuned rules: R1's rule structure, but every parameter chosen by grid search on a held-out training slice, then frozen. The real baseline — beating R0 or R1 proves nothing, beating R2 does.",
+  R2: "Tuned rules: R1's rule structure, but every parameter chosen by grid search on a held-out training slice, then frozen. Intended as the strongest rule baseline; in practice the tuning picked up noise and R2 ended up level with R1, so beating either means beating a solid rule set.",
   Jev: "Jev (R3): a probabilistic decision model. Sees the exact same eligible PSPs and observed stats as every other router, nothing more.",
 } as const;
 
