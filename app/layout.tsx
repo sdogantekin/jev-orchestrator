@@ -1,6 +1,9 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+
+const GA_MEASUREMENT_ID = "G-P1Z1BTKGMQ";
 
 export const metadata: Metadata = {
   title: "Payment Decision Lab",
@@ -35,6 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rule-based payment orchestration. No real PSP integration exists or is planned.
         </footer>
       </body>
+      {/* Same Google Analytics property as serkandogantekin.com; reports can be split by hostname. */}
+      <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </html>
   );
 }
