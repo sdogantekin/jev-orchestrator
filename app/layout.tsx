@@ -5,9 +5,28 @@ import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-P1Z1BTKGMQ";
 
+const SITE_URL = "https://jev-orchestrator.serkandogantekin.com";
+const SHARE_TITLE = "Can an AI decision model route payments better than rules?";
+const SHARE_DESCRIPTION =
+  "An experiment pitting Jev, a decision model, against payment routing rules. Pick a payment, change a number and see who flips. Simulation only.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Payment Decision Lab",
   description: "Can Jev, a probabilistic decision model, be a strong alternative to rule-based payment orchestration? A simulation-only experiment.",
+  // What LinkedIn and other sites show when the link is shared; the image comes from app/opengraph-image.tsx.
+  openGraph: {
+    type: "website",
+    siteName: "Payment Decision Lab",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
