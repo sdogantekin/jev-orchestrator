@@ -53,8 +53,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <footer className="mx-auto max-w-5xl px-4 py-8 text-xs text-slate-500">
-          Payment Decision Lab is a simulation-only experiment testing a claim about Jev, a decision model from TypeSafe, as an alternative to
-          rule-based payment orchestration. No real PSP integration exists or is planned.
+          <p>
+            Payment Decision Lab is a simulation-only experiment testing a claim about Jev, a decision model from TypeSafe, as an alternative to
+            rule-based payment orchestration. No real PSP integration exists or is planned.
+          </p>
+          <p className="mt-3">
+            Built by{" "}
+            <a href="https://serkandogantekin.com" className="font-medium text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline">
+              Serkan Dogantekin
+            </a>{" "}
+            · serkandogantekin.com
+          </p>
         </footer>
       </body>
       {/* Same Google Analytics property as serkandogantekin.com; reports can be split by hostname. */}
