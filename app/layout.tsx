@@ -62,7 +62,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="https://serkandogantekin.com" className="font-medium text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline">
               Serkan Dogantekin
             </a>{" "}
-            · serkandogantekin.com
+            · serkandogantekin.com ·{" "}
+            <a href="https://github.com/sdogantekin/jev-orchestrator" className="font-medium text-slate-400 underline-offset-2 hover:text-slate-200 hover:underline">
+              Code on GitHub
+            </a>
           </p>
         </footer>
       </body>
