@@ -742,7 +742,8 @@ or a newer model version (`typesafe/jev-1.14` exists as of 2026-10-24) changes t
 - Chargeback rate (a rough, static proxy for fraud risk in this simulator — see
   `docs/assumptions.md` #13) is never a selection criterion for any router. It's shown to Jev as
   context but never named in its objective text, and R1/R2 only ever consult it to break an exact
-  tie on acceptance or fee — a case that turned out to be dormant in every scenario reported here.
+  tie on acceptance or fee — a case rare enough that it changed no authorization rate reported here
+  (it moved R1's net cost by under EUR 0.001 in two scenarios; see `docs/assumptions.md` #13).
   Real production routing sometimes also manages chargeback-ratio exposure at a portfolio level
   (e.g. card-network monitoring thresholds); this experiment doesn't test that dimension at all.
 

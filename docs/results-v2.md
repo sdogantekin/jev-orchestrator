@@ -38,6 +38,27 @@ cold start 50%, conflicting 53%, eligibility mix 23%. In Experiment 1 it was neg
 | V2-H4 | Cold start still hurts Jev. | **Not supported** | Cold start: Jev - R1 = +0.08 [0.06, 0.10]. Jev beat both rule sets, by its widest margin over the statistics reference (+0.70). |
 | V2-H5 | Jev adds nothing beyond simple statistics. | **Not supported** (one scenario) | Cold start: Jev - stats ref. = +0.70, CI above zero. In the other 5 scenarios Jev is slightly *below* the reference (-0.02 to -0.13). |
 
+## Robustness check: stricter error margins (added 2026-11-11, after the run)
+
+The pre-registered CIs above resample individual decisions. Decisions within one seed share the
+same observed data, so they aren't independent and those CIs are optimistic. This check, which
+wasn't pre-registered, uses the 20 seeds as the unit: one mean difference per seed, then a 95%
+t-interval over the 20 values. Script: `experiments/scripts/v2-seed-level-check.ts`; output:
+`experiments/results/v2-seed-level.json`.
+
+| Scenario | Jev - Jev (Exp. 1) | Jev - R1 | Jev - R2 | Jev - stats ref. |
+|---|---|---|---|---|
+| Stable | +1.05 [0.87, 1.23] (20/20) | 0.00 [-0.04, 0.04] (6/20) | +0.25 [0.20, 0.30] (20/20) | -0.04 [-0.07, -0.02] (3/20) |
+| Drift | +1.05 [0.86, 1.24] (20/20) | +0.27 [0.21, 0.34] (20/20) | +0.35 [0.25, 0.44] (20/20) | -0.13 [-0.15, -0.10] (0/20) |
+| Thin data | +0.81 [0.65, 0.98] (20/20) | -0.39 [-0.43, -0.35] (0/20) | -0.14 [-0.18, -0.10] (1/20) | -0.10 [-0.12, -0.08] (0/20) |
+| Cold start | +1.00 [0.89, 1.12] (20/20) | +0.08 [0.04, 0.12] (17/20) | +0.27 [0.22, 0.31] (20/20) | +0.70 [0.66, 0.74] (20/20) |
+| Conflicting | +1.22 [1.04, 1.40] (20/20) | +0.20 [0.16, 0.23] (20/20) | -0.05 [-0.09, -0.02] (4/20) | -0.02 [-0.04, 0.00] (4/20) |
+| Eligibility mix | +1.05 [0.91, 1.20] (20/20) | 0.00 [-0.03, 0.04] (11/20) | -0.18 [-0.22, -0.14] (0/20) | -0.04 [-0.06, -0.01] (3/20) |
+
+In percentage points; in brackets, the 95% interval; in parentheses, the number of seeds where Jev
+was ahead. The intervals are 2-5x wider than the per-decision ones, and **every hypothesis
+verdict above is unchanged**.
+
 ## What this means
 
 - **Experiment 1's loss was mostly about thin data, not Jev.** With 20x more data, the same

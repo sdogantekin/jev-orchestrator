@@ -131,10 +131,13 @@ was already fully absent from both rule routers' decision logic (see the Playgro
 field-impact appendix); this doesn't add it as a primary criterion, it only uses it to resolve
 the specific case where the primary criteria give no information at all.
 
-**Verified as a no-op against every already-published number**: re-ran R0/R1/R2's full tuning +
-evaluation for all 6 scenarios against this change and diffed against the committed
-`experiments/results/*.json` — R1 and R2's authorization rates and R2's tuned parameters are
-byte-identical in every scenario. Exact floating-point ties on continuous, noisy acceptance/fee
-values essentially never occur in the real scenario streams, so this was dormant in every
-decision that produced the committed results. It's reachable in the Playground's custom mode,
-where a visitor can easily type identical numbers for two PSPs by hand.
+**Effect on published numbers (corrected 2026-11-11).** The original note here said this was a
+no-op: authorization rates and R2's tuned parameters were re-checked and are identical in every
+scenario. That check missed one thing. Observed acceptance is a count over ~150 attempts, so
+exact ties do occur occasionally, and in two scenarios (drift and cold start) the new tiebreak
+changes a handful of R1's choices between PSPs that then gave the same authorization result but a
+different fee. R1's net cost per authorized transaction moved by less than EUR 0.001 there, and
+its average simulated latency slightly. No authorization rate, no R2 or Jev number and no
+conclusion changed. `experiments/results/drift.json` and `cold_start.json` were regenerated on
+2026-11-11 so the committed files match the current code. The tiebreak matters more in the
+Playground's custom mode, where a visitor can easily type identical numbers for two PSPs by hand.
