@@ -29,6 +29,16 @@ Either way, Jev costs money and 200ms or more per decision, where rules are free
 The full report is [`EXPERIMENT.md`](EXPERIMENT.md); Experiment 2's scored results are in
 [`docs/results-v2.md`](docs/results-v2.md).
 
+## Requirements and how this was built
+
+The project started from a written requirements document, prepared together with an AI assistant
+before any code: [`docs/requirements.md`](docs/requirements.md), unchanged since 2026-10-07. (The
+"section N" references in code comments and docs point to it.) It fixed the key decisions up
+front (the metric, the scale, the train/test split, the safety boundary), required the hypotheses
+to be committed before any run, and defined stop-and-report checkpoints.
+[`docs/requirements-status.md`](docs/requirements-status.md) records what was met, what changed
+and why, and what was not done.
+
 ## This app never touches real payments
 
 - It never processes, authorizes, captures, refunds, routes, or executes a real payment.

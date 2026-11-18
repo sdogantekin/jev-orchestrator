@@ -1,7 +1,8 @@
 # Jev / Decisions API notes
 
-Checked 2026-10-11, per section 18 ("Verify Before Coding"), before writing the Jev adapter
-(build step 3). Each item is labeled by how it was sourced:
+Checked 2026-10-11, per section 18 ("Verify Before Coding") of [`requirements.md`](requirements.md),
+before writing the Jev adapter (build step 3).
+Each item is labeled by how it was sourced:
 
 - **Primary** — fetched directly from an official openrouter.ai or typesafe.ai page.
 - **Secondary** — came from third-party aggregator/summary sites via search, not confirmed
