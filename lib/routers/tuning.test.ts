@@ -24,6 +24,10 @@ describe("enumerateGrid", () => {
   });
 });
 
+// These run real grid searches; a shared CI runner can take 2x longer than a laptop, which is
+// more than vitest's default 5s limit.
+const SLOW_TEST_TIMEOUT_MS = 30_000;
+
 describe("tuneR2", () => {
   it("picks the preferredForUsd that clearly maximizes training-slice authorization rate", () => {
     // All three PSPs have a solid base acceptance (comfortably above R1's 0.88 safety
@@ -50,7 +54,7 @@ describe("tuneR2", () => {
 
     const tuned = tuneR2(scenario, "tuning-test-scenario", rates, tinyGrid);
     expect(tuned.preferredForUsd).toBe("gamma");
-  });
+  }, SLOW_TEST_TIMEOUT_MS);
 
   it("is deterministic for the same scenario and tuning seed", () => {
     const scenario = { world: baseWorld, stream: baseStream, observedView: { lag: 50, window: 150, backgroundHistoryLimits: [] } };
@@ -66,5 +70,5 @@ describe("tuneR2", () => {
     const a = tuneR2(scenario, "determinism-test-scenario", rates, tinyGrid);
     const b = tuneR2(scenario, "determinism-test-scenario", rates, tinyGrid);
     expect(a).toEqual(b);
-  });
+  }, SLOW_TEST_TIMEOUT_MS);
 });
