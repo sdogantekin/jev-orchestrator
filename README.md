@@ -29,6 +29,17 @@ Either way, Jev costs money and 200ms or more per decision, where rules are free
 The full report is [`EXPERIMENT.md`](EXPERIMENT.md); Experiment 2's scored results are in
 [`docs/results-v2.md`](docs/results-v2.md).
 
+## What it looks like
+
+The Playground replays a recorded decision, or makes a live call to Jev with your own numbers. Two
+hand-written rule books and the AI read the same data, and the page highlights when they disagree.
+
+![The Playground: two rule books and Jev choose a PSP for the same payment](docs/images/playground.png)
+
+The Results page holds the numbers of both experiments, with the verdict at the top.
+
+![The Results page: the verdict and the first chart](docs/images/results.png)
+
 ## Requirements and how this was built
 
 The project started from a written requirements document, prepared together with an AI assistant
