@@ -42,15 +42,31 @@ The Results page holds the numbers of both experiments, with the verdict at the 
 
 ![The Results page: the verdict and the first chart](docs/images/results.png)
 
-## Requirements and how this was built
+## How this was built (with an AI assistant)
 
-The project started from a written requirements document, prepared together with an AI assistant
-before any code: [`docs/requirements.md`](docs/requirements.md), unchanged since 2026-10-07. (The
-"section N" references in code comments and docs point to it.) It fixed the key decisions up
-front (the metric, the scale, the train/test split, the safety boundary), required the hypotheses
-to be committed before any run, and defined stop-and-report checkpoints.
-[`docs/requirements-status.md`](docs/requirements-status.md) records what was met, what changed
-and why, and what was not done.
+The project is a human-led collaboration with AI assistants (Claude). The way of working matters
+as much as the result, so it is written down:
+
+- **Requirements first.** Before any code, the question, the locked decisions (metric, scale,
+  train/test split), the safety boundary, the hypotheses and the stop-and-report checkpoints were
+  written down together with an AI assistant: [`docs/requirements.md`](docs/requirements.md),
+  unchanged since 2026-10-07 (the "section N" references in code comments point to it).
+  [`docs/requirements-status.md`](docs/requirements-status.md) records what was met, what changed
+  and why, and what was not done.
+- **Predictions before runs.** The hypotheses were committed before the first run, and again, with
+  a pass rule for each, before Experiment 2, so the results could not be bent to fit afterwards.
+- **One checkpoint at a time.** The AI coding agent built each step (simulator, rule routers, Jev
+  adapter, pilot, full run, web page) and stopped to report. The project owner made the calls that
+  changed the plan, which are logged in [`docs/assumptions.md`](docs/assumptions.md). Commits carry
+  `Co-Authored-By` trailers.
+- **Guardrails around cost and silent errors.** Tests never call the live API, and recorded
+  responses replay without cost. Experiment 1 started with a one-seed pilot, Experiment 2 was
+  rehearsed with a fake Jev that makes no network calls and estimates the cost, and the Experiment 2
+  batch script stops if a whole seed fails.
+- **Mistakes were caught, fixed and written down.** The first R2 tuning overfit a single stream and
+  was redone on pooled seeds. A stale results file was caught while building the Results page. The
+  first explanation of why Jev lost was only part of the story, which led to Experiment 2. A note
+  claiming that a code change affected no published number was wrong and was corrected.
 
 ## This app never touches real payments
 
