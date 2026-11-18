@@ -1,5 +1,7 @@
 # Payment Decision Lab
 
+[![CI](https://github.com/sdogantekin/jev-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/sdogantekin/jev-orchestrator/actions/workflows/ci.yml)
+
 A simulation-only experiment testing one question:
 
 > Can Jev, a probabilistic decision model from TypeSafe, be a strong alternative to
