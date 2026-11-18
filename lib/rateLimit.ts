@@ -9,7 +9,12 @@ import { Redis } from "@upstash/redis";
  * so it is not a substitute for Upstash in a real deployment.
  */
 
-const upstashConfigured = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+// Upstash's own names, or the KV_REST_API_* names that Vercel's Upstash integration injects.
+// Redis.fromEnv() below reads whichever pair is present.
+const upstashConfigured = Boolean(
+  (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) ||
+    (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+);
 
 const redis = upstashConfigured ? Redis.fromEnv() : null;
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { checkAndIncrementGlobalDailyCap, checkVisitorRateLimit, isUpstashConfigured } from "./rateLimit.js";
 
 // No UPSTASH_REDIS_REST_URL/TOKEN in the test environment, so these exercise the in-memory
@@ -41,3 +41,33 @@ describe("rateLimit (in-memory fallback)", () => {
     expect(lastResult!.reason).toBe("global_daily");
   });
 });
+
+describe("rateLimit: which environment variables switch Upstash on", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  async function configuredWith(env: Record<string, string>): Promise<boolean> {
+    vi.resetModules();
+    for (const name of ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN", "KV_REST_API_URL", "KV_REST_API_TOKEN"]) vi.stubEnv(name, "");
+    for (const [name, value] of Object.entries(env)) vi.stubEnv(name, value);
+    // Constructing the client makes no network call; only fake credentials are used.
+    const mod = await import("./rateLimit.js");
+    return mod.isUpstashConfigured();
+  }
+
+  it("is on with Upstash's own variable names", async () => {
+    expect(await configuredWith({ UPSTASH_REDIS_REST_URL: "https://fake.upstash.io", UPSTASH_REDIS_REST_TOKEN: "fake" })).toBe(true);
+  });
+
+  it("is on with the KV_REST_API_* names that Vercel's Upstash integration injects", async () => {
+    expect(await configuredWith({ KV_REST_API_URL: "https://fake.upstash.io", KV_REST_API_TOKEN: "fake" })).toBe(true);
+  });
+
+  it("stays on the in-memory fallback when only half a pair is present", async () => {
+    expect(await configuredWith({ UPSTASH_REDIS_REST_URL: "https://fake.upstash.io" })).toBe(false);
+    expect(await configuredWith({ KV_REST_API_TOKEN: "fake" })).toBe(false);
+  });
+});
+
