@@ -1,11 +1,11 @@
 # Requirements status
 
-[`docs/requirements.md`](requirements.md) is the requirements document for this project. It was
+[`REQUIREMENTS.md`](../REQUIREMENTS.md) is the requirements document for this project. It was
 prepared together with an AI assistant before any code was written, and it is kept here exactly
 as it was committed on 2026-10-07. This file records where the project ended up against it: what
 was met, what changed and why, and what was not done. Last updated 2026-11-18.
 
-- "section N" in code comments and docs refers to the numbered sections of `requirements.md`.
+- "section N" in code comments and docs refers to the numbered sections of `REQUIREMENTS.md`.
 - Statuses: **Met**, **Met, with a change**, **Partly**, **Not done**.
 
 ## How the build followed the document

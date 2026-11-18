@@ -1,6 +1,6 @@
 # Jev / Decisions API notes
 
-Checked 2026-10-11, per section 18 ("Verify Before Coding") of [`requirements.md`](requirements.md),
+Checked 2026-10-11, per section 18 ("Verify Before Coding") of [`REQUIREMENTS.md`](../REQUIREMENTS.md),
 before writing the Jev adapter (build step 3).
 Each item is labeled by how it was sourced:
 
@@ -145,7 +145,7 @@ Checked both:
 - **TypeSafe's Terms of Use** (last updated 2026-09-19): no clause restricting publication of
   benchmark or comparative test results either.
 
-## Summary: anything that changes an assumption in requirements.md?
+## Summary: anything that changes an assumption in REQUIREMENTS.md?
 
 No assumption in the requirements doc needs to change. Section 8 (Jev Decision Contract) and
 section 9.2's cost estimate both hold up well against the real API. The one thing worth noting

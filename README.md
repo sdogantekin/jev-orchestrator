@@ -49,7 +49,7 @@ as much as the result, so it is written down:
 
 - **Requirements first.** Before any code, the question, the locked decisions (metric, scale,
   train/test split), the safety boundary, the hypotheses and the stop-and-report checkpoints were
-  written down together with an AI assistant: [`docs/requirements.md`](docs/requirements.md),
+  written down together with an AI assistant: [`REQUIREMENTS.md`](REQUIREMENTS.md),
   unchanged since 2026-10-07 (the "section N" references in code comments point to it).
   [`docs/requirements-status.md`](docs/requirements-status.md) records what was met, what changed
   and why, and what was not done.

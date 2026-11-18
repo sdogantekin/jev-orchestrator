@@ -1,6 +1,6 @@
 # Assumptions made during implementation
 
-The [requirements doc](requirements.md) is precise about almost everything, but step 1 (domain + simulator)
+The [requirements doc](../REQUIREMENTS.md) is precise about almost everything, but step 1 (domain + simulator)
 required a few concrete choices it leaves open. Recorded here per section 19.3 ("if something
 is ambiguous... ask before guessing" — these were judgment calls small enough to make and flag,
 not large enough to block on). Flag anything here you want changed.
